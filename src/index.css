@@ -1,0 +1,317 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
+    color: #1b476e;
+    background: radial-gradient(circle at 50% 0%, #f4faff 0%, #eaf3fa 40%, #e3edf7 100%);
+    background-attachment: fixed;
+  }
+}
+
+.font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+.font-sans {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Luxury gold shimmer text */
+.gold-text-shimmer {
+  background: linear-gradient(135deg, #a38240 0%, #d8b878 35%, #927334 70%, #d8b878 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Custom shadows */
+.shadow-card {
+  box-shadow: 0 16px 36px -10px rgba(27, 71, 110, 0.08), 0 6px 14px -2px rgba(27, 71, 110, 0.03);
+}
+.shadow-card-hover {
+  box-shadow: 0 24px 48px -12px rgba(27, 71, 110, 0.16), 0 10px 24px -4px rgba(35, 129, 200, 0.12);
+}
+.shadow-floral {
+  filter: drop-shadow(0 8px 18px rgba(35, 129, 200, 0.18));
+}
+.shadow-subtle {
+  box-shadow: 0 4px 20px -2px rgba(35, 129, 200, 0.06);
+}
+
+/* ========================================================================= */
+/* TRANSICIONES Y ANIMACIONES AVANZADAS PARA LOS DIVS Y TARJETAS             */
+/* ========================================================================= */
+
+/* Transición suave para tarjetas interactivas */
+.interactive-card {
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease,
+              background-color 0.35s ease;
+  will-change: transform, box-shadow;
+}
+
+.interactive-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 48px -10px rgba(27, 71, 110, 0.15), 0 12px 24px -4px rgba(35, 129, 200, 0.1);
+  border-color: rgba(142, 202, 242, 0.95);
+}
+
+/* Animación y transición en iconos contenidos en tarjetas */
+.interactive-card .card-icon {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+              background-color 0.3s ease,
+              color 0.3s ease,
+              box-shadow 0.3s ease;
+}
+
+.interactive-card:hover .card-icon {
+  transform: scale(1.14) rotate(5deg);
+  box-shadow: 0 8px 20px -2px rgba(35, 129, 200, 0.25);
+}
+
+/* Transición en esquinas florales dentro de tarjetas */
+.interactive-card .card-floral {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+}
+
+.interactive-card:hover .card-floral {
+  transform: scale(1.08) rotate(6deg);
+  opacity: 1 !important;
+}
+
+/* Cajas de cuenta regresiva */
+.countdown-box {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s ease,
+              background-color 0.3s ease,
+              border-color 0.3s ease;
+  will-change: transform;
+}
+
+.countdown-box:hover {
+  transform: translateY(-4px) scale(1.04);
+  box-shadow: 0 12px 24px -4px rgba(35, 129, 200, 0.2);
+  border-color: #7ec4f4;
+  background-color: #f7fbff;
+}
+
+/* Pulso al cambiar dígitos */
+.digit-pulse {
+  animation: digitPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes digitPop {
+  0% { transform: scale(1.18); color: #1f7cbd; }
+  50% { transform: scale(0.96); }
+  100% { transform: scale(1); color: #1b476e; }
+}
+
+/* Pasos del Itinerario con animación hover refinada */
+.itinerary-step {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.itinerary-step::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 3px;
+  height: 0;
+  background: linear-gradient(180deg, #3c9de2, #bfa369);
+  transition: height 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 9999px;
+}
+
+.itinerary-step:hover {
+  transform: translateY(-4px) translateX(3px);
+  box-shadow: 0 16px 32px -8px rgba(27, 71, 110, 0.14), 0 6px 14px -2px rgba(35, 129, 200, 0.08);
+  border-color: #72bdf0;
+  background-color: #fafcff;
+}
+
+.itinerary-step:hover::before {
+  height: 100%;
+}
+
+.itinerary-step:hover .itinerary-icon {
+  transform: scale(1.18) rotate(-8deg);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Respiración botánica suave */
+@keyframes floralBreathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.028); }
+}
+
+.animate-breathe {
+  animation: floralBreathe 7s ease-in-out infinite;
+}
+
+/* Balanceo botánico sutil como brisa ligera */
+@keyframes floralSway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1.2deg) translateY(-1px); }
+  75% { transform: rotate(-1.2deg) translateY(1px); }
+}
+
+.animate-floral-sway {
+  animation: floralSway 8s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+/* Flotación suave para elementos decorativos */
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.animate-float-gentle {
+  animation: floatGentle 5s ease-in-out infinite;
+}
+
+/* Pulso luminoso suave para llamadas a la acción */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(37, 211, 102, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2.5s infinite;
+}
+
+/* Efecto destello dorado sutil */
+@keyframes shimmerGlow {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+.animate-shimmer {
+  animation: shimmerGlow 3s ease-in-out infinite;
+}
+
+/* Transiciones de revelado al deslizar (Scroll Reveal) */
+.reveal-item {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.reveal-item.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Variaciones escaladas */
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.95) translateY(16px);
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal-scale.is-revealed {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* Delays escalonados para listas de elementos */
+.delay-100 { transition-delay: 100ms; }
+.delay-150 { transition-delay: 150ms; }
+.delay-200 { transition-delay: 200ms; }
+.delay-250 { transition-delay: 250ms; }
+.delay-300 { transition-delay: 300ms; }
+.delay-400 { transition-delay: 400ms; }
+.delay-500 { transition-delay: 500ms; }
+
+/* Pétalos flotantes orgánicos */
+@keyframes floatPetalSlow {
+  0% {
+    transform: translateY(-8vh) rotate(0deg) translateX(0);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.75;
+  }
+  88% {
+    opacity: 0.75;
+  }
+  100% {
+    transform: translateY(105vh) rotate(360deg) translateX(45px);
+    opacity: 0;
+  }
+}
+
+.petal-floating {
+  position: absolute;
+  pointer-events: none;
+  animation: floatPetalSlow 18s linear infinite;
+  z-index: 1;
+  will-change: transform, opacity;
+}
+
+/* Glassmorphism card header */
+.glass-header {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Botones con micro-interacción de click táctil */
+button:not(:disabled) {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.2s ease,
+              background-color 0.2s ease,
+              color 0.2s ease,
+              border-color 0.2s ease;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f7fd;
+}
+::-webkit-scrollbar-thumb {
+  background: #99d0f4;
+  border-radius: 9999px;
+  transition: background 0.25s ease;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3c9de2;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+  }
+  nav, .fixed, button, form {
+    display: none !important;
+  }
+  main {
+    box-shadow: none !important;
+    border: none !important;
+    max-width: 100% !important;
+  }
+}
