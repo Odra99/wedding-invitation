@@ -5,7 +5,7 @@ import {
   demoGuestsData
 } from '../data/weddingData';
 import { FloralSvgDefs } from './FloralSvgDefs';
-import { CalendarIcon, MapPinIcon } from "@phosphor-icons/react";
+import { CalendarBlankIcon, MapPinIcon } from "@phosphor-icons/react";
 
 interface GuestData {
   id: string;
@@ -106,7 +106,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
   // Fetch guest from Google Apps Script or demo fallback
   const fetchGuestById = async (invitationId: string) => {
     setIsLoadingGuest(true);
-    const fetchUrl = `${weddingInfo.googleScriptUrl}?action=getInvitation&id=${encodeURIComponent(invitationId)}`;
+    const fetchUrl = `${weddingInfo.googleScriptUrl}?id=${encodeURIComponent(invitationId)}`;
 
     try {
       const res = await fetch(fetchUrl);
@@ -571,7 +571,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
 
               <div className="relative z-10 pt-2">
                 <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#e0f1fc] text-[#1b67a2] rounded-full flex items-center justify-center text-xl md:text-2xl mx-auto mb-3 shadow-sm">
-                  <CalendarIcon />
+                  <CalendarBlankIcon />
                 </div>
                 <div className="font-serif text-3xl sm:text-3xl md:text-4xl font-bold text-[#122e49] tracking-wide mb-1">
                   20 de Diciembre de 2026
@@ -901,14 +901,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
                   <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">
                     Nombre Completo o Familia *
                   </label>
-                  <input
-                    type="text"
-                    required
-                    value={guestNameInput}
-                    onChange={(e) => setGuestNameInput(e.target.value)}
-                    placeholder="Ej. Familia Morales"
-                    className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm placeholder:text-slate-400 transition-all duration-300"
-                  />
+                  {guestNameInput}
                 </div>
 
                 <div>
@@ -927,29 +920,33 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
               </div>
 
               {attendanceStatus === 'yes' && (
-                <div className="grid grid-cols-2 gap-4 transition-all duration-300">
+                <div className="grid grid-flow-col gap-4 transition-all duration-300">
                   <div>
                     <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">Adultos</label>
                     <input
                       type="number"
                       min="1"
-                      max="15"
+                      max={currentGuest.adultos}
                       value={adultCount}
                       onChange={(e) => setAdultCount(Number(e.target.value))}
+                      onKeyDown={(e) => e.preventDefault()}
                       className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">Niños</label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      value={childCount}
-                      onChange={(e) => setChildCount(Number(e.target.value))}
-                      className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
-                    />
-                  </div>
+                  {currentGuest.ninos > 0 && (
+                    <div>
+                      <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">Niños</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max={currentGuest.ninos}
+                        value={childCount}
+                        onChange={(e) => setChildCount(Number(e.target.value))}
+                        onKeyDown={(e) => e.preventDefault()}
+                        className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 

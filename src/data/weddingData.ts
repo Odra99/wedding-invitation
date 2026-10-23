@@ -28,7 +28,7 @@ export const weddingInfo: WeddingDetails = {
   stateCountry: 'Quetzaltenango, Guatemala',
   theme: 'Boda Civil · Celeste y Blanco con Hortensias',
   phoneWhatsapp: '50247442616',
-  googleScriptUrl: 'https://script.google.com/macros/s/AKfycbzTn6YVCtQ8JfGNNERmmt7LF7q6vrpWLhFUDwiYo-PKpUEOp5LfehBDLV7iAElxjF880Q/exec',
+  googleScriptUrl: 'https://script.google.com/macros/s/AKfycbyhbUQTz7wn4VriJC7bRBAOU9KgaRyOframzAS5_bP0InKOBXU0iz1ByUO1jsnlV8PI_w/exec',
   themeColors: [
     { name: 'Celeste', hex: '#64b5ec', description: 'Tono hortensia suave y cielo despejado' },
     { name: 'Azul Hortensia', hex: '#1b67a2', description: 'Profundidad floral y elegancia' },
