@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Volume2, VolumeX, Music, Play, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Play } from 'lucide-react';
 
 export const MusicPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [hasStartedOnce, setHasStartedOnce] = useState(false);
-  const [showPromptBanner, setShowPromptBanner] = useState(false);
 
   const audioCtxRef = useRef<AudioContext | null>(null);
   const timerRef = useRef<number | null>(null);
