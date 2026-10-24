@@ -148,16 +148,7 @@ export const MusicPlayer: React.FC = () => {
   return (
     <>
       {/* Banner de invitación con música (aparece sutilmente si el navegador bloquea el autoplay inicial) */}
-      {showPromptBanner && !isPlaying && !hasStartedOnce && (
-        <div
-          onClick={startArpeggio}
-          className="fixed top-18 sm:top-20 left-1/2 -translate-x-1/2 z-40 bg-white/95 backdrop-blur-md border border-sky-300 px-4 py-2 rounded-full shadow-xl flex items-center gap-2 cursor-pointer transition-transform hover:scale-105 active:scale-95 text-xs text-[#1b67a2] animate-bounce"
-        >
-          <Music className="w-4 h-4 text-[#2381c8] animate-pulse" />
-          <span className="font-medium">Toca aquí o en la pantalla para escuchar la música de boda</span>
-          <Sparkles className="w-3.5 h-3.5 text-[#bfa369]" />
-        </div>
-      )}
+
 
       {/* Control flotante principal en la esquina inferior */}
       <div className="fixed bottom-5 right-5 z-40 bg-white/95 backdrop-blur-md border border-sky-200/90 rounded-full shadow-xl p-1.5 pl-3 flex items-center gap-2 transition-transform hover:scale-102">

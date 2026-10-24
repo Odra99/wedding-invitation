@@ -17,11 +17,10 @@ interface GuestData {
 }
 
 interface WeddingInvitationFatimaLuisProps {
-  onOpenNextJsGuide: () => void;
 }
 
 export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisProps> = ({
-  onOpenNextJsGuide
+
 }) => {
   // Guest state
   const [currentGuest, setCurrentGuest] = useState<GuestData>({
@@ -55,6 +54,18 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
 
   // Floating petals
   const [petalsEnabled] = useState(true);
+
+  const handleAdultCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Convertir el valor string del input a un número entero
+    
+    const value = parseInt(e.target.value, 10);
+setAdultCount(value);
+    // Validar que sea un número válido entre 0 y 59
+    if (!isNaN(value) && value <= currentGuest.adultos) {
+      console.log('Adult count changed to:', value);
+      setAdultCount(value);
+    }
+  };
 
   // Update countdown
   useEffect(() => {
@@ -245,16 +256,13 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
 
     // 2. Open WhatsApp prefilled message
     let text = '';
-    const idTag = currentGuest.id ? `🔖 *Código de Invitación:* #${currentGuest.id}\n` : '';
 
     if (status === 'yes') {
       text = `¡Hola Fatima y Luis! Confirmo con mucha alegría mi asistencia a su boda civil 💍✨\n\n` +
-             idTag +
              `👤 *Invitado / Familia:* ${name}\n` +
              `👥 *Pases confirmados:* ${adults} Adulto(s) y ${children} Niño(s)\n`;
     } else {
       text = `¡Hola Fatima y Luis! Muchas gracias por la invitación a su boda civil. Lamentablemente no podré acompañarles en esta ocasión.\n\n` +
-             idTag +
              `👤 *Nombre:* ${name}\n`;
     }
 
@@ -383,24 +391,8 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
               Confirmar (RSVP)
             </a>
             
-            {/* Modal de Simulación para probar nombres y pases */}
-            <button
-              onClick={() => setShowSimulateModal(true)}
-              className="px-2.5 py-1 text-[11px] font-medium text-[#1b67a2] hover:text-[#122e49] bg-sky-50 hover:bg-sky-100 rounded-full border border-sky-200 transition-colors flex items-center gap-1 cursor-pointer"
-              title="Personalizar datos de prueba del invitado"
-            >
-              <i className="ph ph-user-switch" />
-              <span>Personalizar Invitado</span>
-            </button>
 
-            <button
-              onClick={onOpenNextJsGuide}
-              className="px-2.5 py-1 text-[11px] font-medium text-[#1a5684] hover:text-[#122e49] bg-white hover:bg-sky-50 rounded-full border border-sky-200 transition-colors flex items-center gap-1 cursor-pointer"
-              title="Ver código fuente Next.js"
-            >
-              <i className="ph ph-code" />
-              <span>Next.js</span>
-            </button>
+           
           </div>
         </nav>
 
@@ -928,8 +920,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
                       min="1"
                       max={currentGuest.adultos}
                       value={adultCount}
-                      onChange={(e) => setAdultCount(Number(e.target.value))}
-                      onKeyDown={(e) => e.preventDefault()}
+                      onChange={handleAdultCountChange}
                       className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
                     />
                   </div>
