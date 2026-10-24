@@ -74,8 +74,6 @@ export const MusicPlayer: React.FC = () => {
       tick();
       timerRef.current = window.setInterval(tick, 2400);
       setIsPlaying(true);
-      setHasStartedOnce(true);
-      setShowPromptBanner(false);
     } catch {
       // Bloqueado temporalmente por política del navegador hasta la interacción del usuario
     }
@@ -107,11 +105,7 @@ export const MusicPlayer: React.FC = () => {
     startArpeggio();
 
     // Comprobar si quedó suspendido o bloqueado
-    const checkTimer = setTimeout(() => {
-      if (!audioCtxRef.current || audioCtxRef.current.state === 'suspended') {
-        setShowPromptBanner(true);
-      }
-    }, 1200);
+
 
     // 2. Escuchar la primera interacción en cualquier parte de la pantalla
     const handleFirstInteraction = () => {
@@ -134,7 +128,6 @@ export const MusicPlayer: React.FC = () => {
     window.addEventListener('keydown', handleFirstInteraction, { passive: true, once: true });
 
     return () => {
-      clearTimeout(checkTimer);
       cleanupListeners();
       stopArpeggio();
       if (audioCtxRef.current) {
