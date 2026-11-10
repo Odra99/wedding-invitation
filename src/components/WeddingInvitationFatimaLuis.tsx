@@ -14,7 +14,9 @@ import {
   CopyIcon,
   NavigationArrowIcon,
   CarIcon,
-  WhatsappLogoIcon
+  WhatsappLogoIcon,
+  MinusIcon,
+  PlusIcon
 } from '@phosphor-icons/react';
 
 interface GuestData {
@@ -27,6 +29,34 @@ interface GuestData {
 }
 
 interface WeddingInvitationFatimaLuisProps {
+}
+
+/**
+ * Selector de cantidad con botones − / +. Reemplaza a <input type="number">,
+ * cuyas flechitas no aparecen en celulares; así nadie tiene que escribir y el
+ * valor nunca sale del rango de pases asignados.
+ */
+function Stepper({ label, value, min, max, onChange }: {
+  label: string; value: number; min: number; max: number; onChange: (n: number) => void;
+}) {
+  const btn =
+    'w-11 h-11 shrink-0 rounded-full flex items-center justify-center text-lg border border-line bg-white text-blue ' +
+    'hover:bg-mist active:scale-90 disabled:opacity-35 disabled:cursor-not-allowed cursor-pointer transition';
+  return (
+    <div role="group" aria-label={label}>
+      <p className="block text-base md:text-lg font-semibold text-ink mb-1.5">{label}</p>
+      <div className="flex items-center justify-between gap-2 px-1.5 py-1.5 rounded-full border border-line bg-white shadow-sm">
+        <button type="button" className={btn} onClick={() => onChange(Math.max(min, value - 1))} disabled={value <= min} aria-label={`Quitar ${label.toLowerCase()}`}>
+          <MinusIcon weight="bold" />
+        </button>
+        <span className="font-serif text-2xl text-ink tabular-nums" aria-live="polite">{value}</span>
+        <button type="button" className={btn} onClick={() => onChange(Math.min(max, value + 1))} disabled={value >= max} aria-label={`Agregar ${label.toLowerCase()}`}>
+          <PlusIcon weight="bold" />
+        </button>
+      </div>
+      <p className="text-sm text-muted mt-1">máximo {max}</p>
+    </div>
+  );
 }
 
 /**
@@ -93,22 +123,6 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     seconds: '--'
   });
 
-
-  const handleAdultCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Convertir el valor string del input a un número entero
-
-    // Limitar entre 1 y los pases de adulto asignados
-    const value = parseInt(e.target.value, 10);
-    if (isNaN(value)) return;
-    setAdultCount(Math.min(Math.max(value, 1), currentGuest.adultos));
-  };
-
-  const handleChildCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Limitar entre 0 y los pases de niño asignados
-    const value = parseInt(e.target.value, 10);
-    if (isNaN(value)) return;
-    setChildCount(Math.min(Math.max(value, 0), currentGuest.ninos));
-  };
 
   // Update countdown
   useEffect(() => {
@@ -572,31 +586,9 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
 
               {attendanceStatus === 'yes' && (
                 <div className="grid grid-flow-col gap-4 transition-all duration-300">
-                  <div>
-                    <label htmlFor="rsvp-adults" className="block text-base md:text-lg font-semibold text-ink mb-1.5">Adultos</label>
-                    <input
-                      id="rsvp-adults"
-                      type="number"
-                      min="1"
-                      max={currentGuest.adultos}
-                      value={adultCount}
-                      onChange={handleAdultCountChange}
-                      className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm transition-all duration-300"
-                    />
-                  </div>
+                  <Stepper label="Adultos" value={adultCount} min={1} max={currentGuest.adultos} onChange={setAdultCount} />
                   {currentGuest.ninos > 0 && (
-                    <div>
-                      <label htmlFor="rsvp-children" className="block text-base md:text-lg font-semibold text-ink mb-1.5">Niños</label>
-                      <input
-                        id="rsvp-children"
-                        type="number"
-                        min="0"
-                        max={currentGuest.ninos}
-                        value={childCount}
-                        onChange={handleChildCountChange}
-                        className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm transition-all duration-300"
-                      />
-                    </div>
+                    <Stepper label="Niños" value={childCount} min={0} max={currentGuest.ninos} onChange={setChildCount} />
                   )}
                 </div>
               )}
