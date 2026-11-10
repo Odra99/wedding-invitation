@@ -2,9 +2,9 @@
 
 @layer base {
   body {
-    font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
-    color: #1b476e;
-    background: radial-gradient(circle at 50% 0%, #f4faff 0%, #eaf3fa 40%, #e3edf7 100%);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: #2F4A6B;
+    background: #EAF1F9;
     background-attachment: fixed;
   }
 }
@@ -14,7 +14,7 @@
 }
 
 .font-sans {
-  font-family: 'Montserrat', sans-serif;
+  font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 /* Luxury gold shimmer text */

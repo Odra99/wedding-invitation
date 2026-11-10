@@ -2,7 +2,8 @@ import React from 'react';
 
 export const FloralSvgDefs: React.FC = () => {
   return (
-    <svg className="hidden" aria-hidden="true">
+    // Sin display:none: los gradientes de un SVG oculto no se pintan en Chrome/Firefox
+    <svg width="0" height="0" style={{ position: 'absolute', overflow: 'hidden' }} aria-hidden="true" focusable="false">
       <defs>
         {/* ================================================================= */}
         {/* GRADIENTES BOTÁNICOS REALISTAS PARA FLORES Y FOLLAJE              */}

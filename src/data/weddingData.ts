@@ -112,12 +112,6 @@ export const itineraryList: ItineraryItem[] = [
 
 export const scheduleList = itineraryList;
 
-export const demoGuestsData: Record<string, { nombre: string; adultos: number; ninos: number; pases: number; nota: string }> = {
-  '1': { nombre: 'Familia Morales Méndez', adultos: 2, ninos: 1, pases: 3, nota: 'Mesa de Honor reservada' },
-  '2': { nombre: 'Lic. Carlos Castillo y Acompañante', adultos: 2, ninos: 0, pases: 2, nota: '' },
-  'demo': { nombre: 'Familia Tezó Gómez', adultos: 3, ninos: 2, pases: 5, nota: '¡Nos llena de alegría contar con ustedes!' }
-};
-
 export const storyMilestones = [
   {
     id: 'm1',

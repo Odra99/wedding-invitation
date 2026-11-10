@@ -10,7 +10,7 @@ import { MusicPlayer } from './components/MusicPlayer';
 export default function App() {
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#eaf3fa] via-[#f3f8fd] to-[#e4eef7] text-[#1b476e] font-sans antialiased selection:bg-sky-200">
+    <div className="min-h-screen bg-mist text-ink antialiased selection:bg-line">
       {/* La Boda Civil de Fatima & Luis: La web es la invitación */}
       <WeddingInvitationFatimaLuis
         

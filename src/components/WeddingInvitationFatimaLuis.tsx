@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import {
   weddingInfo,
-  itineraryList,
-  demoGuestsData
+  itineraryList
 } from '../data/weddingData';
-import { FloralSvgDefs } from './FloralSvgDefs';
-import { CalendarBlankIcon, MapPinIcon } from "@phosphor-icons/react";
+import { InvitationHero } from './InvitationHero';
+import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
+import {
+  HeartIcon,
+  CheckCircleIcon,
+  EnvelopeOpenIcon,
+  CalendarPlusIcon,
+  DownloadSimpleIcon,
+  CopyIcon,
+  NavigationArrowIcon,
+  CarIcon,
+  WhatsappLogoIcon
+} from '@phosphor-icons/react';
 
 interface GuestData {
   id: string;
@@ -17,6 +27,24 @@ interface GuestData {
 }
 
 interface WeddingInvitationFatimaLuisProps {
+}
+
+/**
+ * Sección con revelado al hacer scroll (título y contenido suben y aparecen).
+ * `top`: adorno arriba del título (p. ej. un ramito); `bottom`: adorno pegado
+ * al borde inferior (p. ej. la pradera de flores).
+ */
+function Section({ title, id, children, top, bottom }: {
+  title: string; id: string; children: React.ReactNode; top?: React.ReactNode; bottom?: React.ReactNode;
+}) {
+  return (
+    <section className="sec" id={id}>
+      {top}
+      {title && <h2 className="reveal-item">{title}</h2>}
+      <div className="reveal-item delay-150">{children}</div>
+      {bottom}
+    </section>
+  )
 }
 
 export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisProps> = ({
@@ -32,7 +60,6 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     nota: ''
   });
   const [isLoadingGuest, setIsLoadingGuest] = useState(false);
-  const [showSimulateModal, setShowSimulateModal] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
 
   // RSVP Form state
@@ -43,6 +70,20 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
   const [guestNote, setGuestNote] = useState('');
   const [rsvpSent, setRsvpSent] = useState(false);
   const [lastWhatsAppUrl, setLastWhatsAppUrl] = useState('');
+  // El botón flotante aparece solo después de pasar la portada
+  const [pastHero, setPastHero] = useState(false);
+
+  useEffect(() => {
+    // Visible entre la portada y el formulario de confirmación (ahí ya no hace falta)
+    const onScroll = () => {
+      const rsvp = document.getElementById('rsvp');
+      const beforeRsvp = !rsvp || rsvp.getBoundingClientRect().top > window.innerHeight * 0.6;
+      setPastHero(window.scrollY > window.innerHeight * 0.6 && beforeRsvp);
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   // Countdown state
   const [countdown, setCountdown] = useState({
@@ -52,19 +93,21 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     seconds: '--'
   });
 
-  // Floating petals
-  const [petalsEnabled] = useState(true);
 
   const handleAdultCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Convertir el valor string del input a un número entero
-    
+
+    // Limitar entre 1 y los pases de adulto asignados
     const value = parseInt(e.target.value, 10);
-setAdultCount(value);
-    // Validar que sea un número válido entre 0 y 59
-    if (!isNaN(value) && value <= currentGuest.adultos) {
-      console.log('Adult count changed to:', value);
-      setAdultCount(value);
-    }
+    if (isNaN(value)) return;
+    setAdultCount(Math.min(Math.max(value, 1), currentGuest.adultos));
+  };
+
+  const handleChildCountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Limitar entre 0 y los pases de niño asignados
+    const value = parseInt(e.target.value, 10);
+    if (isNaN(value)) return;
+    setChildCount(Math.min(Math.max(value, 0), currentGuest.ninos));
   };
 
   // Update countdown
@@ -125,7 +168,7 @@ setAdultCount(value);
       let data: any = null;
       try {
         data = JSON.parse(rawText);
-      } catch {}
+      } catch { }
 
       if (data && (data.status === 'success' || data.nombre || data.name)) {
         applyGuestData({
@@ -142,15 +185,6 @@ setAdultCount(value);
     } catch {
       // Ignore network errors and check demo fallback
     }
-
-    // Demo fallback
-    const lower = invitationId.toLowerCase();
-    if (demoGuestsData[lower]) {
-      applyGuestData({ id: invitationId, ...demoGuestsData[lower] });
-      setIsLoadingGuest(false);
-      return true;
-    }
-
     setIsLoadingGuest(false);
     return false;
   };
@@ -237,7 +271,7 @@ setAdultCount(value);
       method: 'POST',
       body: formData,
       mode: 'no-cors'
-    }).catch(() => {});
+    }).catch(() => { });
 
     // Save in localStorage
     try {
@@ -250,7 +284,7 @@ setAdultCount(value);
         nota: note,
         fecha: new Date().toISOString()
       }));
-    } catch {}
+    } catch { }
 
     setRsvpSent(true);
 
@@ -259,11 +293,11 @@ setAdultCount(value);
 
     if (status === 'yes') {
       text = `¡Hola Fatima y Luis! Confirmo con mucha alegría mi asistencia a su boda civil 💍✨\n\n` +
-             `👤 *Invitado / Familia:* ${name}\n` +
-             `👥 *Pases confirmados:* ${adults} Adulto(s) y ${children} Niño(s)\n`;
+        `👤 *Invitado / Familia:* ${name}\n` +
+        `👥 *Pases confirmados:* ${adults} Adulto(s) y ${children} Niño(s)\n`;
     } else {
       text = `¡Hola Fatima y Luis! Muchas gracias por la invitación a su boda civil. Lamentablemente no podré acompañarles en esta ocasión.\n\n` +
-             `👤 *Nombre:* ${name}\n`;
+        `👤 *Nombre:* ${name}\n`;
     }
 
     if (note) {
@@ -322,564 +356,186 @@ setAdultCount(value);
     }
   };
 
- 
+
+
+
   const triggerCopiedToast = (msg: string) => {
     setCopiedNotification(msg);
     setTimeout(() => setCopiedNotification(null), 2800);
   };
 
   return (
-    <div className="w-full text-[#1b476e] font-sans antialiased selection:bg-sky-200 relative overflow-x-hidden md:py-8 lg:py-12">
-      {/* Botánico SVG Dictionary */}
-      <FloralSvgDefs />
-
-      {/* Floating Petals Effect */}
-      {petalsEnabled && (
-        <div className="fixed inset-0 pointer-events-none overflow-hidden z-10" aria-hidden="true">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="petal-floating"
-              style={{
-                left: `${10 + i * 11.5}%`,
-                animationDelay: `${i * 2.3}s`,
-                animationDuration: `${15 + (i % 4) * 3.5}s`
-              }}
-            >
-              <svg viewBox="0 0 24 24" className="w-4 h-4 opacity-75">
-                <use href={i % 2 === 0 ? "#floret-pastel" : "#floret-white"} transform="scale(0.42)" />
-              </svg>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Toast Notification */}
+    <div className="w-full text-ink antialiased selection:bg-line relative overflow-x-hidden md:py-5 lg:py-12">
       {copiedNotification && (
-        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-[#1b67a2] text-white px-5 py-2.5 rounded-full shadow-2xl text-xs md:text-sm font-medium flex items-center gap-2 border border-sky-300 animate-fade-in">
-          <i className="ph ph-check-circle text-lg text-emerald-300" />
+        <div className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-blue text-white px-5 py-2.5 rounded-full shadow-2xl text-base md:text-lg font-medium flex items-center gap-2 border border-line animate-fade-in">
+          <CheckCircleIcon weight="fill" className="text-lg text-gold" />
           <span>{copiedNotification}</span>
         </div>
       )}
-
-      {/* Botón flotante para confirmar en móviles */}
-      <div className="fixed bottom-4 right-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
+      {/* Botón flotante para confirmar en móviles (se oculta tras confirmar) */}
+      {!rsvpSent && pastHero && <div className="fixed bottom-4 left-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
         <a
           href="#rsvp"
-          className="flex items-center gap-2 bg-[#1b67a2] text-white px-4 py-2.5 rounded-full shadow-2xl hover:bg-[#1a5684] transition active:scale-95 text-xs font-semibold tracking-wider uppercase border border-sky-300/50"
+          className="flex items-center gap-2 bg-blue text-white px-4 py-2.5 rounded-full shadow-2xl hover:bg-blue-dark transition active:scale-95 text-sm font-semibold tracking-wider uppercase border border-line/50"
         >
-          <i className="ph ph-envelope-open text-base" />
+          <EnvelopeOpenIcon className="text-base" />
           <span>Confirmar</span>
         </a>
-      </div>
+      </div>}
 
       {/* CONTENEDOR PRINCIPAL RESPONSIVE */}
-      <main className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto bg-[#fbfcfd] min-h-screen shadow-2xl relative border-x border-sky-200/60 pb-20 overflow-hidden md:rounded-3xl lg:rounded-[2.5rem] md:border md:border-sky-200/80">
+      <main className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto bg-white min-h-screen shadow-2xl relative border-x border-line/60 pb-20 overflow-hidden md:rounded-3xl lg:rounded-[2.5rem] md:border md:border-line/80">
 
-        {/* BARRA DE NAVEGACIÓN ELEGANTE EN TABLET Y ESCRITORIO */}
-        <nav className="hidden md:flex items-center justify-between px-8 lg:px-12 py-3.5 border-b border-sky-100/90 text-xs tracking-wider uppercase font-semibold text-[#1a5684] glass-header sticky top-0 z-30 transition-all">
-          <div className="flex items-center gap-2 text-[#1b476e] font-serif text-lg tracking-normal">
-            <span className="font-bold">F</span> <span className="text-[#bfa369] italic text-sm">&amp;</span> <span className="font-bold">L</span>
-            <span className="text-[11px] font-sans uppercase tracking-[0.2em] text-[#2381c8] ml-2">20 · Dic · 2026</span>
-          </div>
+        <InvitationHero />
 
-          <div className="flex items-center gap-5">
-            <a href="#fecha" className="hover:text-[#2381c8] transition-colors">Fecha &amp; Lugar</a>
-            <a href="#itinerario" className="hover:text-[#2381c8] transition-colors">Itinerario</a>
-            <a href="#detalles" className="hover:text-[#2381c8] transition-colors">Detalles</a>
-            <a href="#rsvp" className="bg-[#1b67a2] hover:bg-[#1a5684] text-white px-4 py-1.5 rounded-full shadow-sm transition active:scale-95">
-              Confirmar (RSVP)
-            </a>
-            
-
-           
-          </div>
-        </nav>
-
-        {/* CABECERA FLORAL MONUMENTAL RESPONSIVE */}
-        <div className="relative w-full h-56 sm:h-64 md:h-72 lg:h-80 -mb-6 pointer-events-none select-none overflow-hidden flex justify-center shadow-floral">
-          <svg viewBox="0 0 540 230" className="w-full h-full animate-floral-sway" preserveAspectRatio="xMidYMin slice">
-            {/* Hojas grandes de fondo en verde salvia botánico */}
-            <g transform="translate(65, 45) rotate(-65) scale(0.9)"><use href="#hydrangea-leaf-large" /></g>
-            <g transform="translate(175, 25) rotate(-35) scale(0.95)"><use href="#hydrangea-leaf-large" /></g>
-            <g transform="translate(365, 25) rotate(35) scale(0.95)"><use href="#hydrangea-leaf-large" /></g>
-            <g transform="translate(475, 45) rotate(65) scale(0.9)"><use href="#hydrangea-leaf-large" /></g>
-
-            {/* Ramas de Eucalipto y Gypsophila extendidas */}
-            <g transform="translate(45, 100) rotate(-55) scale(0.9)"><use href="#eucalyptus-sprig" /></g>
-            <g transform="translate(495, 100) rotate(55) scale(0.9)"><use href="#eucalyptus-sprig" /></g>
-            <g transform="translate(110, 115) rotate(-28) scale(0.85)"><use href="#flower-gypsophila" /></g>
-            <g transform="translate(430, 115) rotate(28) scale(0.85)"><use href="#flower-gypsophila" /></g>
-            <g transform="translate(270, 125) scale(0.9)"><use href="#flower-gypsophila" /></g>
-
-            {/* Pompones de hortensias celestes y blancas */}
-            <g transform="translate(110, 65) scale(1.15)"><use href="#hydrangea-pompom-celeste" /></g>
-            <g transform="translate(195, 55) scale(1.1)"><use href="#hydrangea-pompom-white" /></g>
-            <g transform="translate(345, 55) scale(1.1)"><use href="#hydrangea-pompom-celeste" /></g>
-            <g transform="translate(430, 65) scale(1.15)"><use href="#hydrangea-pompom-white" /></g>
-
-            {/* Gran Rosa Blanca de Jardín Realista en el Centro */}
-            <g transform="translate(270, 48) scale(1.3)"><use href="#flower-rose-white" /></g>
-
-            {/* Floretes de hortensia en cascada */}
-            <g transform="translate(155, 108) scale(0.95)"><use href="#floret-celeste" /></g>
-            <g transform="translate(215, 102) scale(0.9)"><use href="#floret-white" /></g>
-            <g transform="translate(270, 98) scale(1.0)"><use href="#floret-celeste" /></g>
-            <g transform="translate(325, 102) scale(0.9)"><use href="#floret-white" /></g>
-            <g transform="translate(385, 108) scale(0.95)"><use href="#floret-celeste" /></g>
-
-            <g transform="translate(75, 125) scale(0.8) rotate(25)"><use href="#floret-pastel" /></g>
-            <g transform="translate(465, 125) scale(0.8) rotate(-25)"><use href="#floret-pastel" /></g>
-          </svg>
-        </div>
-
-        {/* ENCABEZADO Y MONOGRAMA */}
-        <header className="pt-2 pb-6 px-6 sm:px-10 md:px-16 text-center relative z-10">
-
-          {/* Monograma F & L con Corona Floral */}
-          
-          
+        <Section title="" id="bienvenida" bottom={<MeadowDivider seed={3} />}>
+          <p className={`greet transition-opacity duration-300 ${isLoadingGuest ? 'opacity-40' : ''}`}>
+            {isLoadingGuest ? 'Cargando…' : currentGuest.nombre}
+          </p>
           <div>
-            <span className="inline-flex items-center gap-1.5 uppercase tracking-[0.28em] text-[10px] md:text-xs font-semibold text-[#1a5684] mb-2 px-4 py-1.5 bg-[#e0f1fc]/90 rounded-full border border-sky-200 shadow-sm">
-              <i className="ph ph-sparkle text-[#2381c8] text-xs" />
-              Nuestra Boda Civil
-            </span>
-          </div>
-
-          <div>
-            <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl lg:text-7xl text-[#122e49] font-normal tracking-tight leading-tight mt-1">
-              Fatima <span className="text-[#bfa369] font-serif italic text-4xl sm:text-5xl md:text-6xl">&amp;</span> Luis
-            </h1>
-          </div>
-
-          {/* Divisor con Hortensias */}
-          <div className="flex items-center justify-center gap-3 my-4">
-            <div className="w-14 md:w-24 h-px bg-gradient-to-r from-transparent to-sky-300" />
-            <svg viewBox="0 0 60 26" className="w-16 md:w-20 h-7 shadow-subtle">
-              <g transform="translate(12, 13) rotate(-90) scale(0.3)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(48, 13) rotate(90) scale(0.3)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(30, 13) scale(0.6)"><use href="#floret-celeste" /></g>
-              <g transform="translate(18, 13) scale(0.45)"><use href="#floret-white" /></g>
-              <g transform="translate(42, 13) scale(0.45)"><use href="#floret-white" /></g>
-            </svg>
-            <div className="w-14 md:w-24 h-px bg-gradient-to-l from-transparent to-sky-300" />
-          </div>
-
-          <div>
-            <p className="font-serif italic text-lg sm:text-xl md:text-2xl text-[#1b476e]/90 max-w-md md:max-w-xl mx-auto leading-relaxed">
-              "Con la bendición de Dios y de nuestras familias, tenemos el honor de invitarles a celebrar nuestra unión matrimonial."
+            <p className="font-serif italic text-lg sm:text-xl md:text-2xl text-ink/90 max-w-md md:max-w-xl mx-auto leading-relaxed">
+              Con la bendición de Dios y de nuestras familias, tenemos el honor de invitarles a celebrar nuestra unión matrimonial.
             </p>
           </div>
-
-          {/* Botones de acción rápida en la cabecera */}
-         
-        </header>
-
-        {/* ================================================================= */}
-        {/* TARJETA PERSONALIZADA: NOMBRE DEL INVITADO Y PASES ASIGNADOS     */}
-        {/* ================================================================= */}
-        <section id="guestCardSection" className="px-5 sm:px-8 md:px-10 lg:px-12 mb-8">
-          <div className="max-w-2xl mx-auto bg-gradient-to-r from-[#f0f7fd]/90 via-white to-[#f0f7fd]/90 rounded-3xl p-6 sm:p-7 md:p-8 border-2 border-sky-200 shadow-card text-center relative overflow-hidden interactive-card group reveal-item">
-            
-            {/* Esquina floral decorativa izquierda */}
-            <div className="card-floral absolute -top-3 -left-3 w-24 h-24 pointer-events-none select-none opacity-90">
-              <svg viewBox="0 0 80 80" className="w-full h-full">
-                <g transform="translate(18, 18) rotate(-45) scale(0.38)"><use href="#hydrangea-leaf-large" /></g>
-                <g transform="translate(32, 26) scale(0.55)"><use href="#flower-rose-white" /></g>
-                <g transform="translate(20, 44) scale(0.5)"><use href="#floret-celeste" /></g>
-                <g transform="translate(48, 20) scale(0.48)"><use href="#floret-white" /></g>
-              </svg>
-            </div>
-
-            {/* Esquina floral decorativa derecha */}
-            <div className="card-floral absolute -top-3 -right-3 w-24 h-24 pointer-events-none select-none opacity-90">
-              <svg viewBox="0 0 80 80" className="w-full h-full">
-                <g transform="translate(62, 18) rotate(45) scale(0.38)"><use href="#hydrangea-leaf-large" /></g>
-                <g transform="translate(48, 26) scale(0.55)"><use href="#flower-rose-white" /></g>
-                <g transform="translate(60, 44) scale(0.5)"><use href="#floret-celeste" /></g>
-                <g transform="translate(32, 20) scale(0.48)"><use href="#floret-white" /></g>
-              </svg>
-            </div>
-
-            <div className="relative z-10">
-              {isLoadingGuest && (
-                <div className="py-4 text-xs md:text-sm text-[#1b67a2] flex items-center justify-center gap-2">
-                  <i className="ph ph-spinner animate-spin text-lg text-[#2381c8]" />
-                  <span>Cargando datos de su invitación...</span>
-                </div>
-              )}
-
-              <div className={isLoadingGuest ? 'opacity-40' : ''}>
-                <p className="font-serif italic text-base md:text-lg text-[#1b67a2] mb-1">
-                  Tenemos el honor de invitar a:
-                </p>
-                <h3 className="font-serif text-3xl sm:text-4xl md:text-4xl font-bold text-[#122e49] tracking-wide my-2 leading-tight">
-                  {currentGuest.nombre}
-                </h3>
-                
-                <div className="w-14 h-0.5 bg-[#bfa369] mx-auto my-3" />
-
-                <div className="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-2xl border border-sky-200 shadow-sm text-xs md:text-sm text-[#1b476e] font-medium transition-transform duration-300 group-hover:scale-105">
-                  <i className="ph ph-ticket text-[#2381c8] text-base" />
-                  <span>
-                    Pases reservados:{' '}
-                    <strong className="text-[#122e49] font-bold">
-                      {currentGuest.ninos > 0
-                        ? `${currentGuest.adultos} Adulto(s) y ${currentGuest.ninos} Niño(s) (${currentGuest.pases} Pases)`
-                        : `${currentGuest.adultos} ${currentGuest.adultos === 1 ? 'Pase Personal' : 'Pases Asignados'}`}
-                    </strong>
-                  </span>
-                </div>
-                
-                {currentGuest.nota && (
-                  <p className="text-xs md:text-sm italic text-slate-600 mt-2.5 max-w-md mx-auto">
-                    "{currentGuest.nota}"
-                  </p>
-                )}
-              </div>
-            </div>
+          <div className="seats">
+            Pases reservados:{' '}
+            <strong className="text-ink font-bold">
+              {currentGuest.ninos > 0
+                ? `${currentGuest.adultos} Adulto(s) y ${currentGuest.ninos} Niño(s) (${currentGuest.pases} Pases)`
+                : `${currentGuest.adultos} ${currentGuest.adultos === 1 ? 'Pase Personal' : 'Pases Asignados'}`}
+            </strong>
           </div>
-        </section>
+        </Section>
 
-        {/* ================================================================= */}
-        {/* BLOQUE RESPONSIVE: FECHA & LUGAR (2 Columnas)                    */}
-        {/* ================================================================= */}
-        <div id="fecha" className="grid grid-cols-1 md:grid-cols-2 gap-6 px-5 sm:px-8 md:px-10 lg:px-12 mb-10 items-stretch">
-          
-          {/* TARJETA FECHA Y HORARIOS */}
-          <section className="h-full reveal-item delay-100">
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-card border border-sky-200/90 text-center relative overflow-hidden interactive-card group h-full flex flex-col justify-between">
-              
-              {/* Ramillete floral esquina superior derecha */}
-              <div className="card-floral absolute -top-3 -right-3 w-32 h-32 pointer-events-none select-none">
-                <svg viewBox="0 0 100 100" className="w-full h-full shadow-floral">
-                  <g transform="translate(78, 22) rotate(45) scale(0.5)"><use href="#hydrangea-leaf-large" /></g>
-                  <g transform="translate(60, 16) scale(0.55)"><use href="#eucalyptus-sprig" /></g>
-                  <g transform="translate(68, 36) scale(0.65)"><use href="#hydrangea-pompom-celeste" /></g>
-                  <g transform="translate(40, 22) scale(0.65)"><use href="#flower-rose-white" /></g>
-                  <g transform="translate(30, 44) scale(0.52)"><use href="#floret-white" /></g>
-                </svg>
+        <Section title="Fecha" id="fecha">
+          <div className="rounded-3xl p-6 md:p-8  text-center relative overflow-hidden group h-full flex flex-col justify-between">
+            <div className="relative z-10 pt-2">
+              <p className="font-serif text-sm uppercase tracking-[0.2em] text-blue-dark font-semibold mb-4">Domingo</p>
+              <div className="font-serif text-3xl sm:text-3xl md:text-4xl font-bold text-ink tracking-wide mb-1">
+                20 de Diciembre de 2026
               </div>
-
-              <div className="relative z-10 pt-2">
-                <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#e0f1fc] text-[#1b67a2] rounded-full flex items-center justify-center text-xl md:text-2xl mx-auto mb-3 shadow-sm">
-                  <CalendarBlankIcon />
-                </div>
-                <div className="font-serif text-3xl sm:text-3xl md:text-4xl font-bold text-[#122e49] tracking-wide mb-1">
-                  20 de Diciembre de 2026
-                </div>
-                <p className="text-xs uppercase tracking-wider text-[#1a5684] font-semibold mb-4">Domingo</p>
-
-                {/* Pastilla de Horarios */}
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-[11px] md:text-xs text-[#1b476e]">
-                  <span className="bg-[#f0f7fd] border border-sky-200 px-3 py-1.5 rounded-full font-medium shadow-2xs">
-                    Recepción de Invitados: <strong className="text-[#1b476e] font-bold">11:30 AM</strong>
-                  </span>
-                  <span className="bg-[#f0f7fd] border border-sky-200 px-3 py-1.5 rounded-full font-medium shadow-2xs">
-                    Inicio Ceremonia Civil: <strong className="text-[#1b476e] font-bold">11:45 AM</strong>
-                  </span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4 border-t border-sky-100 relative z-10 mt-6">
-                <button
-                  type="button"
-                  onClick={addToGoogleCalendar}
-                  className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-[#f0f7fd] hover:bg-[#e0f1fc] text-[#1b476e] text-xs font-semibold border border-sky-200 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 w-full cursor-pointer"
-                >
-                  <i className="ph ph-calendar-plus text-base text-[#1b67a2]" />
-                  <span>Google Calendar</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={downloadIcsFile}
-                  className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-xl bg-white hover:bg-[#f0f7fd] text-[#1b476e] text-xs font-semibold border border-sky-200 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 w-full cursor-pointer"
-                >
-                  <i className="ph ph-download-simple text-base text-[#2381c8]" />
-                  <span>Descargar iCal (.ics)</span>
-                </button>
-              </div>
-            </div>
-          </section>
-
-          {/* TARJETA UBICACIÓN Y GPS */}
-          <section id="ubicacion" className="h-full reveal-item delay-200">
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-card border border-sky-200/90 text-center relative overflow-hidden interactive-card group h-full flex flex-col justify-between">
-              
-              {/* Ramillete floral esquina superior izquierda */}
-              <div className="card-floral absolute -top-3 -left-3 w-32 h-32 pointer-events-none select-none">
-                <svg viewBox="0 0 100 100" className="w-full h-full shadow-floral">
-                  <g transform="translate(22, 22) rotate(-45) scale(0.5)"><use href="#hydrangea-leaf-large" /></g>
-                  <g transform="translate(40, 16) scale(0.55)"><use href="#eucalyptus-sprig" /></g>
-                  <g transform="translate(32, 36) scale(0.65)"><use href="#hydrangea-pompom-white" /></g>
-                  <g transform="translate(60, 22) scale(0.65)"><use href="#flower-rose-white" /></g>
-                  <g transform="translate(70, 44) scale(0.52)"><use href="#floret-celeste" /></g>
-                </svg>
-              </div>
-
-              <div className="relative z-10 pt-2">
-                <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#e0f1fc] text-[#1b67a2] rounded-full flex items-center justify-center text-xl md:text-2xl mx-auto mb-3 shadow-sm">
-                  <MapPinIcon />
-                </div>
-                <h3 className="font-serif text-3xl md:text-4xl font-bold text-[#122e49]">La Quebrada</h3>
-                
-                <button
-                  onClick={handleCopyLocation}
-                  className="group inline-flex items-center justify-center gap-1 text-xs md:text-sm font-semibold text-slate-800 hover:text-[#1b67a2] mt-1 cursor-pointer transition-colors"
-                  title="Click para copiar dirección"
-                >
-                  <span>Diagonal Santa Rita Final, Zona 2</span>
-                  <i className="ph ph-copy text-slate-400 group-hover:text-[#1b67a2] transition-transform group-hover:scale-110" />
-                </button>
-
-                <p className="text-xs md:text-sm text-slate-500">La Esperanza, Quetzaltenango</p>
-
-                <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-[11px] md:text-xs text-[#1b476e]">
-                  <span className="bg-[#f0f7fd] border border-sky-200 px-3 py-1.5 rounded-full font-medium shadow-2xs transition-transform duration-300 hover:scale-105">🌿 Ceremonia: La Villa</span>
-                  <span className="bg-[#f0f7fd] border border-sky-200 px-3 py-1.5 rounded-full font-medium shadow-2xs transition-transform duration-300 hover:scale-105">🏡 Almuerzo: La Casona</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-sky-100 relative z-10">
-                <a
-                  href="https://maps.google.com/?q=La+Quebrada+La+Esperanza+Quetzaltenango"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#1b67a2] hover:bg-[#1a5684] text-white py-3 px-3 rounded-xl text-xs md:text-sm font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
-                >
-                  <i className="ph ph-navigation-arrow text-base" /> Google Maps
-                </a>
-                <a
-                  href="https://waze.com/ul?q=La%20Quebrada%20La%20Esperanza"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-[#1b88d8] hover:bg-[#156fb1] text-white py-3 px-3 rounded-xl text-xs md:text-sm font-bold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
-                >
-                  <i className="ph ph-car text-base" /> Abrir en Waze
-                </a>
-              </div>
-            </div>
-          </section>
-
-        </div>
-
-        {/* CUENTA REGRESIVA CON CORONACIÓN FLORAL */}
-        <section className="px-5 sm:px-8 md:px-10 lg:px-12 mb-12 reveal-item delay-100">
-          <div className="max-w-2xl mx-auto bg-gradient-to-br from-white via-[#f0f7fd]/50 to-white rounded-3xl p-6 md:p-8 border border-sky-200 shadow-card text-center relative interactive-card group overflow-hidden">
-            
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <svg viewBox="0 0 35 16" className="w-10 h-5 transition-transform duration-500 group-hover:-translate-x-1">
-                <g transform="translate(10, 8) rotate(-45) scale(0.22)"><use href="#hydrangea-leaf-large" /></g>
-                <g transform="translate(25, 8) scale(0.42)"><use href="#floret-celeste" /></g>
-              </svg>
-              <span className="text-xs md:text-sm uppercase tracking-widest text-[#1b67a2] font-semibold">
-                Para el Gran Día
-              </span>
-              <svg viewBox="0 0 35 16" className="w-10 h-5 transition-transform duration-500 group-hover:translate-x-1">
-                <g transform="translate(10, 8) scale(0.42)"><use href="#floret-white" /></g>
-                <g transform="translate(25, 8) rotate(45) scale(0.22)"><use href="#hydrangea-leaf-large" /></g>
-              </svg>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2 sm:gap-4 md:gap-5 text-center">
-              <div className="bg-white py-3 md:py-4 px-2 rounded-2xl border border-sky-100 shadow-sm countdown-box">
-                <span className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1b476e] block leading-tight tabular-nums">
-                  {countdown.days}
-                </span>
-                <span className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold mt-1 block">Días</span>
-              </div>
-              <div className="bg-white py-3 md:py-4 px-2 rounded-2xl border border-sky-100 shadow-sm countdown-box">
-                <span className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1b476e] block leading-tight tabular-nums">
-                  {countdown.hours}
-                </span>
-                <span className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold mt-1 block">Horas</span>
-              </div>
-              <div className="bg-white py-3 md:py-4 px-2 rounded-2xl border border-sky-100 shadow-sm countdown-box">
-                <span className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1b476e] block leading-tight tabular-nums">
-                  {countdown.minutes}
-                </span>
-                <span className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold mt-1 block">Min</span>
-              </div>
-              <div className="bg-white py-3 md:py-4 px-2 rounded-2xl border border-sky-100 shadow-sm countdown-box">
-                <span className="font-serif text-3xl sm:text-4xl md:text-5xl font-bold text-[#1b476e] block leading-tight tabular-nums">
-                  {countdown.seconds}
-                </span>
-                <span className="text-[10px] sm:text-xs uppercase tracking-wider text-slate-500 font-semibold mt-1 block">Seg</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SEPARADOR BOTÁNICO FLORAL AMPLIO */}
-        <div className="flex items-center justify-center px-6 md:px-12 mb-10">
-          <div className="flex-1 h-px bg-gradient-to-r from-transparent via-sky-300 to-transparent" />
-          <div className="px-4 flex items-center gap-1.5 shadow-subtle">
-            <svg viewBox="0 0 120 32" className="w-32 md:w-40 h-8">
-              <g transform="translate(20, 16) rotate(-90) scale(0.35)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(100, 16) rotate(90) scale(0.35)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(40, 16) scale(0.55)"><use href="#floret-white" /></g>
-              <g transform="translate(60, 16) scale(0.75)"><use href="#floret-celeste" /></g>
-              <g transform="translate(80, 16) scale(0.55)"><use href="#floret-pastel" /></g>
-            </svg>
-          </div>
-          <div className="flex-1 h-px bg-gradient-to-l from-transparent via-sky-300 to-transparent" />
-        </div>
-
-        {/* ================================================================= */}
-        {/* ITINERARIO DEL EVENTO                                             */}
-        {/* ================================================================= */}
-        <section id="itinerario" className="px-5 sm:px-8 md:px-10 lg:px-12 mb-14 reveal-item">
-          <div className="text-center mb-8">
-            <h2 className="font-serif text-3xl sm:text-4xl md:text-5xl text-[#122e49] font-normal">Itinerario del Día</h2>
-            <div className="w-12 h-0.5 bg-[#bfa369] mx-auto mt-2" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
-            {itineraryList.map((item, index) => (
-              <div
-                key={item.id}
-                className={`bg-white p-4 md:p-5 rounded-2xl border shadow-card itinerary-step group flex flex-col justify-between reveal-item delay-${((index % 3) + 1) * 100} ${
-                  item.badge === 'Puntual' ? 'border-sky-300 ring-1 ring-sky-200' : 'border-sky-100'
-                }`}
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 itinerary-icon transition-transform duration-300">
-                        <use href={`#${item.iconType}`} transform="translate(12, 12) scale(0.48)" />
-                      </svg>
-                      <span className="text-xs md:text-sm font-bold text-[#1b67a2] tracking-wider transition-colors group-hover:text-[#2381c8]">{item.time}</span>
-                    </div>
-                    {item.badge && (
-                      <span
-                        className={`text-[10px] px-2.5 py-0.5 rounded-full font-medium transition-transform duration-300 group-hover:scale-105 ${
-                          item.badge === 'Puntual'
-                            ? 'bg-[#1b67a2] text-white font-semibold shadow-2xs'
-                            : 'bg-[#f0f7fd] text-[#1a5684] border border-sky-200/60'
-                        }`}
-                      >
-                        {item.badge}
-                      </span>
-                    )}
+              <div className="flex justify-center gap-3 sm:gap-5 mt-6" aria-label="Cuenta regresiva">
+                {([
+                  ['Días', countdown.days],
+                  ['Horas', countdown.hours],
+                  ['Min', countdown.minutes],
+                  ['Seg', countdown.seconds]
+                ] as const).map(([label, value]) => (
+                  <div key={label} className="flex flex-col items-center min-w-[3.5rem]">
+                    <span className="font-serif text-4xl md:text-5xl text-blue tabular-nums leading-none">{value}</span>
+                    <span className="text-sm uppercase tracking-[0.15em] text-muted mt-1">{label}</span>
                   </div>
-                  <h4 className="font-serif text-lg md:text-xl font-bold text-[#122e49] transition-colors group-hover:text-[#1b67a2]">{item.title}</h4>
-                  <p className="text-xs md:text-sm text-slate-600 mt-1">{item.description}</p>
-                </div>
+                ))}
               </div>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm md:text-base text-ink">
+                <span className=" px-3 py-1.5 rounded-full font-medium shadow-2xs">
+                  Recepción de Invitados: <strong className="text-ink font-bold">11:30 AM</strong>
+                </span>
+                <span className=" px-3 py-1.5 rounded-full font-medium shadow-2xs">
+                  Inicio Ceremonia Civil: <strong className="text-ink font-bold">11:45 AM</strong>
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-4 border-t border-mist relative z-10 mt-6">
+              <button
+                type="button"
+                onClick={addToGoogleCalendar}
+                className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-full bg-blue hover:bg-blue-dark text-white text-base font-semibold border border-line transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 w-full cursor-pointer"
+              >
+                <CalendarPlusIcon className="text-lg" />
+                <span>Google Calendar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={downloadIcsFile}
+                className="flex items-center justify-center gap-1.5 py-3 px-3 rounded-full bg-white hover:bg-mist text-ink text-base font-semibold border border-line transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:scale-95 w-full cursor-pointer"
+              >
+                <DownloadSimpleIcon className="text-lg text-blue" />
+                <span>Descargar iCal (.ics)</span>
+              </button>
+            </div>
+          </div>
+
+        </Section>
+
+        <Section title="Lugar" id="lugar" top={<SprigDivider seed={4} />} bottom={<MeadowDivider seed={12} />}>
+
+          <div className="relative z-10 pt-2">
+
+            <h3 className="font-serif text-3xl md:text-4xl font-bold text-ink">La Quebrada</h3>
+
+            <button
+              onClick={handleCopyLocation}
+              className="group inline-flex items-center justify-center gap-1 text-base md:text-lg font-semibold text-ink hover:text-blue mt-1 cursor-pointer transition-colors"
+              title="Click para copiar dirección"
+            >
+              <span className="font-serif">Diagonal Santa Rita Final, Zona 2</span>
+              <CopyIcon className="text-muted group-hover:text-blue transition-transform group-hover:scale-110" />
+            </button>
+
+            <p className="font-serif text-base md:text-lg text-muted">La Esperanza, Quetzaltenango</p>
+
+            <div className="font-serif flex flex-wrap items-center justify-center gap-2 mt-4 text-sm md:text-base text-ink">
+              <span className="bg-mist border border-line px-3 py-1.5 rounded-full font-medium shadow-2xs transition-transform duration-300 hover:scale-105">🌿 Ceremonia: La Villa</span>
+              <span className="bg-mist border border-line px-3 py-1.5 rounded-full font-medium shadow-2xs transition-transform duration-300 hover:scale-105">🏡 Almuerzo: La Casona</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 mt-6 pt-4 border-t border-mist relative z-10">
+            <a
+              href="https://maps.google.com/?q=La+Quebrada+La+Esperanza+Quetzaltenango"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-blue hover:bg-blue-dark text-white py-3 px-3 rounded-full text-base md:text-lg font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
+            >
+              <NavigationArrowIcon className="text-base" /> Google Maps
+            </a>
+            <a
+              href="https://waze.com/ul?q=La%20Quebrada%20La%20Esperanza"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 bg-white hover:bg-mist text-ink border border-line py-3 px-3 rounded-full text-base md:text-lg font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95 active:translate-y-0"
+            >
+              <CarIcon className="text-base" /> Abrir en Waze
+            </a>
+          </div>
+        </Section>
+
+
+        <Section title="Itinerario" id="itinerario" top={<SprigDivider seed={6} />}>
+          <ol className="timeline">
+            {itineraryList.map((e, i) => (
+              <li key={e.time} className="reveal-item from-left" style={{ transitionDelay: `${0.25 + i * 0.12}s` }}>
+                <time>{e.time}</time><div><h3>{e.title}</h3></div>
+              </li>
             ))}
-          </div>
-        </section>
+          </ol>
+        </Section>
+        <Section title="Mesa de regalos" id="regalos" top={<SprigDivider seed={9} />} bottom={<MeadowDivider seed={21} />}>
+          <p className="lead">Su presencia es nuestro mejor regalo. Si desean tener un detalle con nosotros, aquí nos pueden encontrar.</p>
 
-        {/* ================================================================= */}
-        {/* DETALLES: VESTIMENTA, SOBRES, PEQUEÑOS                            */}
-        {/* ================================================================= */}
-        <section id="detalles" className="px-5 sm:px-8 md:px-10 lg:px-12 mb-14 reveal-item">
-          <div className="text-center mb-8">
-            <h2 className="font-serif text-3xl sm:text-4xl text-[#122e49] font-normal">Detalles para el Invitado</h2>
-            <div className="w-10 h-0.5 bg-[#bfa369] mx-auto mt-2" />
-          </div>
+        </Section>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-            
-            {/* Código de Vestimenta */}
-            <div className="bg-white p-6 rounded-3xl border border-sky-100 shadow-card text-center relative overflow-hidden interactive-card group reveal-item delay-100 flex flex-col justify-between">
-              <div className="card-floral absolute top-2 right-2 w-8 h-8 opacity-75">
-                <svg viewBox="0 0 30 30" className="w-full h-full">
-                  <use href="#floret-celeste" transform="translate(15, 15) scale(0.45)" />
-                </svg>
-              </div>
-              <div>
-                <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#f0f7fd] text-[#1b67a2] rounded-full flex items-center justify-center text-xl mx-auto mb-3 border border-sky-200">
-                  <i className="ph ph-t-shirt" />
-                </div>
-                <h4 className="font-serif text-xl md:text-2xl font-bold text-[#122e49]">Código de Vestimenta</h4>
-                <span className="inline-block text-xs font-bold text-[#1a5684] uppercase tracking-wider mt-2 mb-3 px-3.5 py-1 bg-[#e0f1fc] rounded-full border border-sky-200/80 transition-transform duration-300 group-hover:scale-105">
-                  Formal Campestre de Día
-                </span>
-                <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-                  Por llevarse a cabo en jardines y áreas verdes, recomendamos calzado cómodo, de piso o tacón corrido.
-                </p>
-              </div>
-            </div>
-
-            {/* Muestra de Cariño */}
-            <div className="bg-white p-6 rounded-3xl border border-sky-100 shadow-card text-center relative overflow-hidden interactive-card group reveal-item delay-200 flex flex-col justify-between">
-              <div className="card-floral absolute top-2 right-2 w-8 h-8 opacity-75">
-                <svg viewBox="0 0 30 30" className="w-full h-full">
-                  <use href="#floret-white" transform="translate(15, 15) scale(0.45)" />
-                </svg>
-              </div>
-              <div>
-                <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#f0f7fd] text-[#1a5684] rounded-full flex items-center justify-center text-xl mx-auto mb-3 border border-sky-200">
-                  <i className="ph ph-envelope-simple" />
-                </div>
-                <h4 className="font-serif text-xl md:text-2xl font-bold text-[#122e49]">Muestra de Cariño</h4>
-                <span className="inline-block text-xs font-bold text-[#1b476e] uppercase tracking-wider mt-2 mb-3 px-3.5 py-1 bg-[#e0f1fc] rounded-full border border-sky-200/80 transition-transform duration-300 group-hover:scale-105">
-                  Lluvia de Sobres
-                </span>
-                <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-                  Su presencia y buenos deseos son nuestro mejor regalo. Para quienes deseen tener un detalle, dispondremos de un buzón para sobres en la recepción.
-                </p>
-              </div>
-            </div>
-
-            {/* Para los Pequeños */}
-            <div className="bg-white p-6 rounded-3xl border border-sky-100 shadow-card text-center relative overflow-hidden interactive-card group reveal-item delay-300 flex flex-col justify-between">
-              <div className="card-floral absolute top-2 right-2 w-8 h-8 opacity-75">
-                <svg viewBox="0 0 30 30" className="w-full h-full">
-                  <use href="#floret-celeste" transform="translate(15, 15) scale(0.45)" />
-                </svg>
-              </div>
-              <div>
-                <div className="card-icon w-10 h-10 md:w-12 md:h-12 bg-[#f0f7fd] text-[#1b67a2] rounded-full flex items-center justify-center text-xl mx-auto mb-3 border border-sky-200">
-                  <i className="ph ph-balloon" />
-                </div>
-                <h4 className="font-serif text-xl md:text-2xl font-bold text-[#122e49]">Para los Pequeños</h4>
-                <span className="inline-block text-xs font-bold text-[#1a5684] uppercase tracking-wider mt-2 mb-3 px-3.5 py-1 bg-[#e0f1fc] rounded-full border border-sky-200/80 transition-transform duration-300 group-hover:scale-105">
-                  Diversión Familiar
-                </span>
-                <p className="text-xs md:text-sm text-slate-600 leading-relaxed">
-                  Las áreas verdes de La Villa cuentan con casitas infantiles y trampolín para que los pequeños también se diviertan.
-                </p>
-              </div>
-            </div>
-
-          </div>
-        </section>
-
-        {/* ================================================================= */}
-        {/* FORMULARIO RSVP RESPONSIVE CON WHATSAPP Y GOOGLE SHEETS           */}
-        {/* ================================================================= */}
-        <section id="rsvp" className="px-5 sm:px-8 md:px-10 lg:px-12 mb-12 reveal-scale">
-          <div className="max-w-2xl mx-auto bg-gradient-to-b from-white via-[#f0f7fd]/30 to-white border-2 border-sky-300 rounded-3xl p-6 sm:p-8 md:p-10 shadow-card relative overflow-hidden interactive-card group">
-            
-            {/* Esquina floral superior derecha en el RSVP */}
-            <div className="card-floral absolute -top-3 -right-3 w-32 h-32 pointer-events-none select-none">
-              <svg viewBox="0 0 90 90" className="w-full h-full shadow-floral">
-                <g transform="translate(75, 20) rotate(45) scale(0.45)"><use href="#hydrangea-leaf-large" /></g>
-                <g transform="translate(56, 18) scale(0.55)"><use href="#flower-rose-white" /></g>
-                <g transform="translate(66, 44) scale(0.6)"><use href="#hydrangea-pompom-celeste" /></g>
-                <g transform="translate(34, 34) scale(0.52)"><use href="#floret-white" /></g>
-              </svg>
-            </div>
-
+        <Section id="rsvp" title="">
+          <div className="max-w-2xl mx-auto bg-gradient-to-b from-white via-mist/30 to-white border-2 border-line rounded-3xl p-6 sm:p-8 md:p-10 shadow-card relative overflow-hidden interactive-card group">
             <div className="text-center mb-6">
-              <h3 className="font-serif text-3xl sm:text-4xl font-bold text-[#122e49]">Confirmar Asistencia</h3>
-              <p className="text-xs md:text-sm text-slate-600 mt-2 max-w-md mx-auto">
-                Por favor confirma antes del <strong className="text-[#1b476e] font-bold">2 de Diciembre</strong> para reservar tu lugar.
+              <h3 className="font-serif text-3xl sm:text-4xl font-bold text-ink">Confirmar Asistencia</h3>
+              <p className="text-base md:text-lg text-muted mt-2 max-w-md mx-auto">
+                Por favor confirma antes del <strong className="text-ink font-bold">2 de Diciembre</strong> para reservar tu lugar.
               </p>
             </div>
 
             {rsvpSent && (
-              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-center text-xs md:text-sm text-emerald-800 space-y-2 animate-fade-in">
+              <div className="mb-6 p-4 bg-mist border border-line rounded-2xl text-center text-base md:text-lg text-ink space-y-2 animate-fade-in">
                 <div className="flex items-center justify-center gap-2 font-semibold">
-                  <i className="ph ph-check-circle text-lg text-emerald-600" />
+                  <CheckCircleIcon weight="fill" className="text-lg text-ink" />
                   <span>¡Muchas gracias! Tu confirmación ha sido guardada.</span>
                 </div>
-                <p className="text-slate-600 text-xs">
+                <p className="text-muted text-sm">
                   Si tu navegador bloqueó la ventana de WhatsApp, puedes{' '}
-                  <a href={lastWhatsAppUrl} target="_blank" rel="noopener noreferrer" className="text-emerald-700 font-bold underline">
+                  <a href={lastWhatsAppUrl} target="_blank" rel="noopener noreferrer" className="text-ink font-bold underline">
                     hacer clic aquí para abrir WhatsApp
                   </a>.
                 </p>
@@ -887,23 +543,26 @@ setAdultCount(value);
             )}
 
             <form onSubmit={handleRSVPSubmit} className="space-y-4 relative z-10">
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">
-                    Nombre Completo o Familia *
-                  </label>
-                  {guestNameInput}
+                  <p className="block text-base md:text-lg font-semibold text-ink mb-1.5">
+                    Confirmando para
+                  </p>
+                  <p className="w-full px-4 py-3 rounded-xl border border-line bg-mist font-serif text-lg text-ink">
+                    {guestNameInput}
+                  </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">
+                  <label htmlFor="rsvp-status" className="block text-base md:text-lg font-semibold text-ink mb-1.5">
                     ¿Podrás acompañarnos? *
                   </label>
                   <select
+                    id="rsvp-status"
                     value={attendanceStatus}
                     onChange={(e) => setAttendanceStatus(e.target.value as 'yes' | 'no')}
-                    className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm cursor-pointer transition-all duration-300"
+                    className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm cursor-pointer transition-all duration-300"
                   >
                     <option value="yes">¡Sí, con mucho gusto asistiré!</option>
                     <option value="no">Lamentablemente no podré asistir</option>
@@ -914,27 +573,28 @@ setAdultCount(value);
               {attendanceStatus === 'yes' && (
                 <div className="grid grid-flow-col gap-4 transition-all duration-300">
                   <div>
-                    <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">Adultos</label>
+                    <label htmlFor="rsvp-adults" className="block text-base md:text-lg font-semibold text-ink mb-1.5">Adultos</label>
                     <input
+                      id="rsvp-adults"
                       type="number"
                       min="1"
                       max={currentGuest.adultos}
                       value={adultCount}
                       onChange={handleAdultCountChange}
-                      className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
+                      className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm transition-all duration-300"
                     />
                   </div>
                   {currentGuest.ninos > 0 && (
                     <div>
-                      <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">Niños</label>
+                      <label htmlFor="rsvp-children" className="block text-base md:text-lg font-semibold text-ink mb-1.5">Niños</label>
                       <input
+                        id="rsvp-children"
                         type="number"
                         min="0"
                         max={currentGuest.ninos}
                         value={childCount}
-                        onChange={(e) => setChildCount(Number(e.target.value))}
-                        onKeyDown={(e) => e.preventDefault()}
-                        className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white shadow-sm transition-all duration-300"
+                        onChange={handleChildCountChange}
+                        className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm transition-all duration-300"
                       />
                     </div>
                   )}
@@ -942,171 +602,50 @@ setAdultCount(value);
               )}
 
               <div>
-                <label className="block text-xs md:text-sm font-semibold text-[#122e49] mb-1.5">
+                <label htmlFor="rsvp-note" className="block text-base md:text-lg font-semibold text-ink mb-1.5">
                   Mensaje para los novios (opcional)
                 </label>
                 <textarea
+                  id="rsvp-note"
                   rows={2}
                   value={guestNote}
                   onChange={(e) => setGuestNote(e.target.value)}
                   placeholder="¡Muchas felicidades Fatima y Luis!"
-                  className="w-full px-4 py-3 rounded-xl border border-sky-200 text-sm focus:outline-none focus:ring-4 focus:ring-sky-100 focus:border-[#3c9de2] bg-white resize-none shadow-sm placeholder:text-slate-400 transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white resize-none shadow-sm placeholder:text-muted transition-all duration-300"
                 />
               </div>
 
               <button
                 type="submit"
-                className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white py-4 px-6 rounded-xl font-semibold text-sm md:text-base flex items-center justify-center gap-2 shadow-lg animate-pulse-glow transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
+                className="w-full bg-blue hover:bg-blue-dark text-white py-4 px-6 rounded-full font-semibold text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
               >
-                <i className="ph ph-whatsapp-logo text-xl md:text-2xl transition-transform duration-300 group-hover:scale-110" />
+                <WhatsappLogoIcon className="text-xl md:text-2xl transition-transform duration-300 group-hover:scale-110" />
                 <span>Confirmar y Enviar por WhatsApp</span>
               </button>
             </form>
 
-            <p className="text-[11px] md:text-xs text-center text-slate-500 mt-4 leading-relaxed">
-              Tu confirmación se guardará de inmediato en nuestra lista y se abrirá WhatsApp (+502 47442616).
+            <p className="text-sm md:text-base text-center text-muted mt-4 leading-relaxed">
+              Tu confirmación se guardará en nuestra lista y se abrirá WhatsApp para enviarnos el mensaje.
             </p>
           </div>
-        </section>
+        </Section>
+
 
         {/* PIE DE PÁGINA CON BOUQUET FINAL */}
-        <footer className="text-center px-6 pt-2 pb-8 relative reveal-item">
-          <div className="flex justify-center mb-3">
-            <svg viewBox="0 0 280 95" className="w-72 md:w-80 h-24 shadow-floral animate-floral-sway">
-              <g transform="translate(50, 52) rotate(-60) scale(0.6)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(230, 52) rotate(60) scale(0.6)"><use href="#hydrangea-leaf-large" /></g>
-              <g transform="translate(90, 36) rotate(-25) scale(0.65)"><use href="#eucalyptus-sprig" /></g>
-              <g transform="translate(190, 36) rotate(25) scale(0.65)"><use href="#eucalyptus-sprig" /></g>
-
-              <g transform="translate(85, 46) scale(0.75)"><use href="#hydrangea-pompom-celeste" /></g>
-              <g transform="translate(140, 38) scale(1.05)"><use href="#flower-rose-white" /></g>
-              <g transform="translate(195, 46) scale(0.75)"><use href="#hydrangea-pompom-white" /></g>
-
-              <g transform="translate(140, 70) scale(0.65)"><use href="#floret-celeste" /></g>
-              <g transform="translate(110, 66) scale(0.55)"><use href="#floret-white" /></g>
-              <g transform="translate(170, 66) scale(0.55)"><use href="#floret-white" /></g>
-            </svg>
+        <footer className="text-center px-6 pt-2 pb-8 relative">
+          <BottomBouquets />
+          <div className="relative z-10 reveal-item">
+          <div className="w-8 h-8 rounded-full bg-mist text-gold flex items-center justify-center mx-auto mb-2 text-sm border border-line/80 shadow-sm transition-transform duration-300 hover:scale-125">
+            <HeartIcon weight="fill" size={20} />
           </div>
-
-          <div className="w-8 h-8 rounded-full bg-sky-100 text-[#bfa369] flex items-center justify-center mx-auto mb-2 text-sm border border-sky-200/80 shadow-sm transition-transform duration-300 hover:scale-125">
-            <i className="ph ph-heart-fill" />
+          <p className="font-serif text-2xl md:text-3xl text-ink">¡Esperamos celebrar juntos!</p>
+          <p className="text-base md:text-lg text-muted mt-1">Fatima &amp; Luis · 20 de Diciembre de 2026</p>
           </div>
-          <p className="font-serif text-2xl md:text-3xl text-[#122e49]">¡Esperamos celebrar juntos!</p>
-          <p className="text-xs md:text-sm text-slate-500 mt-1">Fatima &amp; Luis · 20 de Diciembre de 2026</p>
         </footer>
 
       </main>
 
-      {/* MODAL PARA PERSONALIZAR / PROBAR DATOS DEL INVITADO */}
-      {showSimulateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-sky-200 relative">
-            <button
-              onClick={() => setShowSimulateModal(false)}
-              className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-600 rounded-full"
-            >
-              <i className="ph ph-x text-lg" />
-            </button>
 
-            <div className="text-center mb-5">
-              <div className="w-10 h-10 rounded-full bg-sky-50 text-[#1b67a2] flex items-center justify-center mx-auto mb-2">
-                <i className="ph ph-user-circle text-2xl" />
-              </div>
-              <h3 className="font-serif text-2xl text-[#122e49] font-medium">Personalizar Invitado</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Prueba cómo ve la invitación un invitado específico antes de enviársela.
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              {/* Presets rápidos */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Ejemplos Pre-configurados:
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(demoGuestsData).map(([key, val]) => (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        applyGuestData({ id: key, ...val });
-                        setShowSimulateModal(false);
-                        triggerCopiedToast(`Cargado: ${val.nombre}`);
-                      }}
-                      className="px-2.5 py-1.5 rounded-lg border border-sky-200 bg-sky-50/60 hover:bg-sky-100 text-[11px] font-medium text-[#1b67a2] truncate transition-colors"
-                    >
-                      {val.nombre.split(' ')[0]} {val.nombre.split(' ')[1] || ''}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Formulario manual */}
-              <div className="space-y-3 pt-2 border-t border-slate-100 text-xs">
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Nombre o Familia:</label>
-                  <input
-                    type="text"
-                    value={currentGuest.nombre}
-                    onChange={(e) => applyGuestData({ nombre: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                    placeholder="Ej. Familia Tezó Gómez"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Adultos:</label>
-                    <input
-                      type="number"
-                      min="1"
-                      value={currentGuest.adultos}
-                      onChange={(e) => {
-                        const a = Number(e.target.value);
-                        applyGuestData({ adultos: a, pases: a + currentGuest.ninos });
-                      }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Niños:</label>
-                    <input
-                      type="number"
-                      min="0"
-                      value={currentGuest.ninos}
-                      onChange={(e) => {
-                        const n = Number(e.target.value);
-                        applyGuestData({ ninos: n, pases: currentGuest.adultos + n });
-                      }}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-semibold text-slate-700 mb-1">Nota o dedicatoria:</label>
-                  <input
-                    type="text"
-                    value={currentGuest.nota}
-                    onChange={(e) => applyGuestData({ nota: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-                    placeholder="Ej. Mesa de Honor reservada"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => setShowSimulateModal(false)}
-                  className="w-full py-2.5 bg-[#1b67a2] hover:bg-[#1a5684] text-white rounded-xl text-xs font-semibold shadow-sm transition-colors cursor-pointer"
-                >
-                  Aplicar y Ver Invitación
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
