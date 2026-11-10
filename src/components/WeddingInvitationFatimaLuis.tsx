@@ -27,6 +27,7 @@ interface GuestData {
   ninos: number;
   pases: number;
   nota: string;
+  whatsapp: string;
 }
 
 interface WeddingInvitationFatimaLuisProps {
@@ -88,7 +89,8 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     adultos: 2,
     ninos: 0,
     pases: 2,
-    nota: ''
+    nota: '',
+    whatsapp: weddingInfo.phoneWhatsapp
   });
   const [isLoadingGuest, setIsLoadingGuest] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
@@ -192,7 +194,8 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
           adultos: parseInt(data.adultos || data.adults || 2, 10),
           ninos: parseInt(data.ninos || data.children || 0, 10),
           pases: parseInt(data.pases || data.passes || ((parseInt(data.adultos, 10) || 2) + (parseInt(data.ninos, 10) || 0)), 10),
-          nota: data.nota || data.note || ''
+          nota: data.nota || data.note || '',
+          whatsapp: data.telefono || data.phone || weddingInfo.phoneWhatsapp
         });
         setIsLoadingGuest(false);
         return true;
@@ -320,7 +323,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     }
 
     const encoded = encodeURIComponent(text);
-    const url = `https://wa.me/${weddingInfo.phoneWhatsapp}?text=${encoded}`;
+    const url = `https://wa.me/${currentGuest.whatsapp}?text=${encoded}`;
     setLastWhatsAppUrl(url);
     window.open(url, '_blank');
   };
