@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import {
   weddingInfo,
-  itineraryList
+  itineraryList,
+  backgroundMusic
 } from '../data/weddingData';
 import { InvitationHero } from './InvitationHero';
 import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
@@ -632,6 +633,10 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
           </div>
           <p className="font-serif text-2xl md:text-3xl text-ink">¡Esperamos celebrar juntos!</p>
           <p className="text-base md:text-lg text-muted mt-1">Fatima &amp; Luis · 20 de Diciembre de 2026</p>
+          <p className="music-credit">
+            ♪ Música: «{backgroundMusic.title}» de {backgroundMusic.composer},
+            interpretada por {backgroundMusic.performer}
+          </p>
           </div>
         </footer>
 

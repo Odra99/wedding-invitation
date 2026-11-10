@@ -37,6 +37,17 @@ export const weddingInfo: WeddingDetails = {
   ]
 };
 
+/**
+ * Música de fondo. El archivo va en public/music/ (sin acentos ni espacios en el nombre).
+ * Los datos de crédito se muestran en el pie de página.
+ */
+export const backgroundMusic = {
+  file: 'music/si-bheag-si-mhor.mp3',
+  title: 'Sí Bheag, Sí Mhór',
+  composer: "Turlough O'Carolan",
+  performer: 'Stephen Murray Music'
+};
+
 export interface ItineraryItem {
   id: string;
   time: string;

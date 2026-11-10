@@ -732,3 +732,18 @@ footer .small {
     }
     .sd-line { stroke-dashoffset: 0 }
 }
+
+/* Crédito de la música en el pie de página */
+.music-credit {
+    margin: 1.25rem auto 0;
+    max-width: 18rem;
+    font-size: .85rem;
+    font-style: italic;
+    line-height: 1.4;
+    color: var(--color-ink);
+    padding: .5rem 1rem;
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, .78);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px)
+}

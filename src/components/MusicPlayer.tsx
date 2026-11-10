@@ -1,155 +1,153 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Volume2, VolumeX, Play } from 'lucide-react';
+import { backgroundMusic } from '../data/weddingData';
+
+/**
+ * Reproductor de música de fondo con un archivo MP3 (public/music/).
+ *
+ * - Usa un <audio> normal: en iPhone suena aunque el interruptor de silencio
+ *   esté activado (a diferencia del audio generado con Web Audio).
+ * - Autoplay: se intenta al cargar. En celulares el navegador lo bloquea hasta
+ *   un toque real, así que esperamos el primer toque/clic en cualquier parte.
+ *   OJO: scroll y touchstart NO cuentan como permiso; sí touchend, pointerup,
+ *   click y keydown.
+ * - Entra con un fade-in suave y se repite en bucle. (iOS no permite cambiar
+ *   el volumen desde la página, así que ahí suena al volumen del teléfono.)
+ */
+
+// BASE_URL = '/wedding-invitation/' (ver vite.config.ts), para que funcione en GitHub Pages
+const SONG_URL = `${import.meta.env.BASE_URL}${backgroundMusic.file}`;
+const SONG_TITLE = backgroundMusic.title;
+const TARGET_VOLUME = 0.45;
+const FADE_MS = 3000;
 
 export const MusicPlayer: React.FC = () => {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const timerRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const fadeRef = useRef<number | null>(null);
   const hasUserPausedRef = useRef(false);
 
-  // Progresión romántica de acordes (Frecuencias en Hz)
-  // C - G - Am - F arpegio de arpa acústica suave y melodiosa
-  const chordFrequencies = [
-    // Acorde C (Do Mayor: C4, E4, G4, B4, C5)
-    [261.63, 329.63, 392.0, 493.88, 523.25],
-    // Acorde G (Sol Mayor: G3, B3, D4, G4, B4)
-    [196.0, 246.94, 293.66, 392.0, 493.88],
-    // Acorde Am (La menor: A3, C4, E4, A4, C5)
-    [220.0, 261.63, 329.63, 440.0, 523.25],
-    // Acorde F (Fa Mayor: F3, A3, C4, F4, A4)
-    [174.61, 220.0, 261.63, 349.23, 440.0]
-  ];
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
+  // true si la persona pausó a propósito (entonces no mostramos la pista "toca para música")
+  const [userPaused, setUserPaused] = useState(false);
 
-  const playChime = (freq: number, timeOffset: number) => {
-    if (!audioCtxRef.current || isMuted) return;
-    const ctx = audioCtxRef.current;
-    const now = ctx.currentTime + timeOffset;
-
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(freq, now);
-
-    // Envolvente acústico suave estilo arpa / caja musical
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(0.045, now + 0.05);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + 2.3);
-
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-
-    osc.start(now);
-    osc.stop(now + 2.4);
+  // Con temporizador y no requestAnimationFrame: rAF se detiene si la página no
+  // se está pintando, y el volumen podría quedarse en 0.
+  const fadeIn = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (fadeRef.current) clearInterval(fadeRef.current);
+    const start = performance.now();
+    audio.volume = 0;
+    fadeRef.current = window.setInterval(() => {
+      const t = Math.min(1, (performance.now() - start) / FADE_MS);
+      audio.volume = TARGET_VOLUME * t * t; // curva suave
+      if (t >= 1 && fadeRef.current) {
+        clearInterval(fadeRef.current);
+        fadeRef.current = null;
+      }
+    }, 50);
   };
 
-  const startArpeggio = async () => {
+  /** Intenta reproducir. Devuelve true si el navegador lo permitió. */
+  const play = async (): Promise<boolean> => {
+    const audio = audioRef.current;
+    if (!audio) return false;
     try {
-      if (!audioCtxRef.current) {
-        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-        audioCtxRef.current = new AudioCtx();
-      }
-
-      if (audioCtxRef.current.state === 'suspended') {
-        await audioCtxRef.current.resume();
-      }
-
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-
-      let chordIndex = 0;
-
-      const tick = () => {
-        if (hasUserPausedRef.current) return;
-        const chord = chordFrequencies[chordIndex];
-        chord.forEach((freq, noteIdx) => {
-          playChime(freq, noteIdx * 0.35);
-        });
-        chordIndex = (chordIndex + 1) % chordFrequencies.length;
-      };
-
-      tick();
-      timerRef.current = window.setInterval(tick, 2400);
-      setIsPlaying(true);
+      audio.volume = 0;
+      await audio.play();
+      fadeIn();
+      return true;
     } catch {
-      // Bloqueado temporalmente por política del navegador hasta la interacción del usuario
+      // NotAllowedError: el navegador exige un toque antes de reproducir sonido
+      return false;
     }
-  };
-
-  const stopArpeggio = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-    setIsPlaying(false);
   };
 
   const togglePlay = () => {
-    if (isPlaying) {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (!audio.paused) {
       hasUserPausedRef.current = true;
-      stopArpeggio();
+      setUserPaused(true);
+      audio.pause();
     } else {
       hasUserPausedRef.current = false;
-      startArpeggio();
+      setUserPaused(false);
+      play();
     }
   };
 
-  // Intentar reproducción automática:
-  // 1. Intento directo inmediato al montar.
-  // 2. Si el navegador lo bloquea (requiere gesto del usuario), se activa en el primer toque / clic / scroll.
   useEffect(() => {
-    // 1. Intento inmediato
-    startArpeggio();
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.muted = isMuted;
+  }, [isMuted]);
 
-    // Comprobar si quedó suspendido o bloqueado
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
+    const onPlay = () => setIsPlaying(true);
+    const onPause = () => setIsPlaying(false);
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('pause', onPause);
 
-    // 2. Escuchar la primera interacción en cualquier parte de la pantalla
-    const handleFirstInteraction = () => {
-      if (!hasUserPausedRef.current && (!audioCtxRef.current || audioCtxRef.current.state === 'suspended' || !timerRef.current)) {
-        startArpeggio();
+    const events = ['pointerup', 'touchend', 'click', 'keydown'] as const;
+    const removeListeners = () => events.forEach((ev) => window.removeEventListener(ev, onGesture));
+
+    // Se queda escuchando hasta que la música realmente suene (no "once"),
+    // para que un scroll o un toque fallido previo no la desactive.
+    async function onGesture(e: Event) {
+      // Si tocó el propio botón del reproductor, ese botón decide (play/pausa)
+      if ((e.target as Element | null)?.closest?.('[data-music-player]')) return;
+      if (hasUserPausedRef.current || !audio!.paused) {
+        removeListeners();
+        return;
       }
-      cleanupListeners();
-    };
+      if (await play()) removeListeners();
+    }
 
-    const cleanupListeners = () => {
-      window.removeEventListener('click', handleFirstInteraction);
-      window.removeEventListener('touchstart', handleFirstInteraction);
-      window.removeEventListener('scroll', handleFirstInteraction);
-      window.removeEventListener('keydown', handleFirstInteraction);
-    };
+    play().then((ok) => {
+      if (!ok) events.forEach((ev) => window.addEventListener(ev, onGesture, { passive: true }));
+    });
 
-    window.addEventListener('click', handleFirstInteraction, { passive: true, once: true });
-    window.addEventListener('touchstart', handleFirstInteraction, { passive: true, once: true });
-    window.addEventListener('scroll', handleFirstInteraction, { passive: true, once: true });
-    window.addEventListener('keydown', handleFirstInteraction, { passive: true, once: true });
+    // Pausar si cambia de app/pestaña y retomar al volver
+    let pausedByVisibility = false;
+    const onVisibility = () => {
+      if (document.hidden && !audio.paused) {
+        pausedByVisibility = true;
+        audio.pause();
+      } else if (!document.hidden && pausedByVisibility && !hasUserPausedRef.current) {
+        pausedByVisibility = false;
+        play();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
-      cleanupListeners();
-      stopArpeggio();
-      if (audioCtxRef.current) {
-        audioCtxRef.current.close().catch(() => {});
-      }
+      removeListeners();
+      document.removeEventListener('visibilitychange', onVisibility);
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('pause', onPause);
+      if (fadeRef.current) clearInterval(fadeRef.current);
+      audio.pause();
     };
   }, []);
 
   return (
     <>
-      {/* Banner de invitación con música (aparece sutilmente si el navegador bloquea el autoplay inicial) */}
+      <audio ref={audioRef} src={SONG_URL} loop preload="auto" />
 
-
-      {/* Control flotante principal en la esquina inferior */}
-      <div className="fixed bottom-5 right-5 z-40 bg-white/95 backdrop-blur-md border border-sky-200/90 rounded-full shadow-xl p-1.5 pl-3 flex items-center gap-2 transition-transform hover:scale-102">
+      {/* Control flotante en la esquina inferior */}
+      <div data-music-player className="fixed bottom-5 right-5 z-40 bg-white/95 backdrop-blur-md border border-line rounded-full shadow-xl p-1.5 pl-3 flex items-center gap-2 transition-transform hover:scale-102">
         <button
           onClick={togglePlay}
-          aria-label={isPlaying ? 'Pausar música romántica' : 'Reproducir música romántica'}
-          className="flex items-center gap-2 text-xs font-medium text-[#1b476e] hover:text-[#2381c8] cursor-pointer focus:outline-none"
+          aria-label={isPlaying ? `Pausar música: ${SONG_TITLE}` : `Reproducir música: ${SONG_TITLE}`}
+          className="flex items-center gap-2 text-xs font-medium text-ink hover:text-blue cursor-pointer focus:outline-none"
         >
-          <span className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
-            isPlaying ? 'bg-[#1b67a2] text-white shadow-sm' : 'bg-sky-50 text-[#1b67a2]'
+          <span className={`relative w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+            isPlaying ? 'bg-blue text-white shadow-sm' : 'bg-mist text-blue'
           }`}>
             {isPlaying ? (
               <span className="flex items-center gap-0.5">
@@ -158,22 +156,27 @@ export const MusicPlayer: React.FC = () => {
                 <span className="w-0.5 h-2.5 bg-white rounded-full animate-[pulse_0.8s_ease-in-out_infinite_400ms]" />
               </span>
             ) : (
-              <Play className="w-3.5 h-3.5 ml-0.5" />
+              <>
+                {/* Pista visual mientras el navegador espera el primer toque */}
+                {!userPaused && <span className="absolute inset-0 rounded-full bg-line animate-ping" />}
+                <Play className="relative w-3.5 h-3.5 ml-0.5" />
+              </>
             )}
           </span>
-          <span className="hidden sm:inline text-xs font-serif italic text-[#1b476e]">
-            {isPlaying ? 'Música de Boda Sonando' : 'Reproducir Música'}
-          </span>
+          <span className="hidden sm:inline text-sm font-serif italic text-ink">♪ {SONG_TITLE}</span>
+          {!isPlaying && !userPaused && (
+            <span className="sm:hidden text-sm font-serif italic text-ink pr-1">Toca para música</span>
+          )}
         </button>
 
         {isPlaying && (
           <button
             onClick={() => setIsMuted(!isMuted)}
             aria-label={isMuted ? 'Activar sonido' : 'Silenciar'}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-full cursor-pointer transition-colors"
+            className="p-1.5 text-muted hover:text-ink rounded-full cursor-pointer transition-colors"
             title={isMuted ? 'Activar sonido' : 'Silenciar'}
           >
-            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-rose-500" /> : <Volume2 className="w-3.5 h-3.5 text-[#1b67a2]" />}
+            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-muted" /> : <Volume2 className="w-3.5 h-3.5 text-blue" />}
           </button>
         )}
       </div>
