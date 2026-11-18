@@ -41,37 +41,37 @@ export interface ItineraryItem {
 export const itineraryList: ItineraryItem[] = [
   {
     time: '11:30 AM',
-    title: 'Recepción de Invitados',
+    title: 'Recepción de invitados',
     description: 'Bienvenida al área campestre y acomodo en asientos.',
     location: 'La Villa'
   },
   {
     time: '11:45 AM',
-    title: 'Ceremonia Civil Notarial',
+    title: 'Ceremonia civil',
     description: 'Lectura de acta, votos matrimoniales, intercambio de anillos y firmas.',
     location: 'La Villa'
   },
   {
-    time: '12:40 PM',
-    title: 'Boquitas & Fotos Oficiales',
+    time: '12:30 PM',
+    title: 'Boquitas y fotos oficiales',
     description: 'Aperitivos mientras se realiza la sesión fotográfica en los jardines.',
     location: 'Jardines'
   },
   {
     time: '01:15 PM',
-    title: 'Banquete de Almuerzo',
+    title: 'Almuerzo',
     description: 'Servicio del almuerzo para compartir en familia en el salón.',
     location: 'La Casona'
   },
   {
     time: '02:15 PM',
-    title: 'Brindis Oficial & Palabras',
+    title: 'Brindis y palabras',
     description: 'Palabras de los recién casados, padres y brindis nupcial.',
     location: 'La Casona'
   },
   {
     time: '02:40 PM',
-    title: 'Corte de Pastel y Café',
+    title: 'Corte del pastel y café',
     description: 'Corte del pastel matrimonial acompañado de café recién preparado.',
     location: 'La Casona'
   }

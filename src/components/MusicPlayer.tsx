@@ -165,7 +165,7 @@ export const MusicPlayer: React.FC = () => {
           </span>
           <span className="hidden sm:inline text-sm font-serif italic text-ink">♪ {SONG_TITLE}</span>
           {!isPlaying && !userPaused && (
-            <span className="sm:hidden text-sm font-serif italic text-ink pr-1">Toca para música</span>
+            <span className="sm:hidden text-sm font-serif italic text-ink pr-1">Toca para escuchar</span>
           )}
         </button>
 

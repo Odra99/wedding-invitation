@@ -43,7 +43,7 @@ export const PageLoader: React.FC<{ visible: boolean }> = ({ visible }) => {
       </svg>
       <p className="page-loader-names">Fatima &amp; Luis</p>
       <p className="page-loader-text">
-        Preparando tu invitación
+        Preparando la invitación
         <span className="page-loader-dots" aria-hidden="true"><span>.</span><span>.</span><span>.</span></span>
       </p>
     </div>

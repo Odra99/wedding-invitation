@@ -102,6 +102,13 @@ function readInvitationId(): string | null {
  */
 type GuestStatus = 'none' | 'loading' | 'found' | 'notfound';
 
+/** "1 adulto", "2 adultos"… */
+const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
+
+/** "2 adultos" o "2 adultos y 1 niño" */
+const describePeople = (adults: number, children: number) =>
+  children > 0 ? `${count(adults, 'adulto', 'adultos')} y ${count(children, 'niño', 'niños')}` : count(adults, 'adulto', 'adultos');
+
 // Si Google Apps Script no responde en este tiempo, se deja de esperar
 const GUEST_FETCH_TIMEOUT_MS = 15000;
 
@@ -326,13 +333,19 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
     // 2. Open WhatsApp prefilled message
     let text: string;
 
+    // Singular o plural según cuántas personas confirman (o, si no asisten, cuántas estaban invitadas)
     if (status === 'yes') {
-      text = `¡Hola Fatima y Luis! Confirmo con mucha alegría mi asistencia a su boda civil 💍✨\n\n` +
-        `👤 *Invitado / Familia:* ${name}\n` +
-        `👥 *Pases confirmados:* ${adults} Adulto(s) y ${children} Niño(s)\n`;
+      const together = adults + children > 1;
+      text = (together
+        ? `¡Hola, Fatima y Luis! Con mucha alegría confirmamos nuestra asistencia a su boda civil 💍✨\n\n`
+        : `¡Hola, Fatima y Luis! Con mucha alegría confirmo mi asistencia a su boda civil 💍✨\n\n`) +
+        `👤 *A nombre de:* ${name}\n` +
+        `👥 *Asistentes:* ${describePeople(adults, children)}\n`;
     } else {
-      text = `¡Hola Fatima y Luis! Muchas gracias por la invitación a su boda civil. Lamentablemente no podré acompañarles en esta ocasión.\n\n` +
-        `👤 *Nombre:* ${name}\n`;
+      text = (manyGuests
+        ? `¡Hola, Fatima y Luis! Muchas gracias por la invitación a su boda civil. Lamentablemente no podremos acompañarles en esta ocasión.\n\n`
+        : `¡Hola, Fatima y Luis! Muchas gracias por la invitación a su boda civil. Lamentablemente no podré acompañarles en esta ocasión.\n\n`) +
+        `👤 *A nombre de:* ${name}\n`;
     }
 
     if (note) {
@@ -349,7 +362,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
     const startDate = '20261220T173000Z'; // 11:30 AM GT (UTC-6)
     const endDate = '20261220T214500Z';
     const title = encodeURIComponent('Boda Civil: Fatima & Luis');
-    const details = encodeURIComponent('Recepción: 11:30 AM | Ceremonia Civil: 11:45 AM en La Villa. Almuerzo en La Casona.');
+    const details = encodeURIComponent('Recepción: 11:30 AM | Ceremonia civil: 11:45 AM en La Villa. Almuerzo en La Casona.');
     const location = encodeURIComponent('La Quebrada, Diagonal Santa Rita Final, Zona 2, La Esperanza, Quetzaltenango');
 
     const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startDate}/${endDate}&details=${details}&location=${location}`;
@@ -364,7 +377,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
       'CALSCALE:GREGORIAN',
       'BEGIN:VEVENT',
       'SUMMARY:Boda Civil: Fatima & Luis',
-      'DESCRIPTION:Recepción: 11:30 AM | Ceremonia Civil Notarial: 11:45 AM en La Villa. Almuerzo en La Casona. Vestimenta: Formal Campestre.',
+      'DESCRIPTION:Recepción: 11:30 AM | Ceremonia civil: 11:45 AM en La Villa. Almuerzo en La Casona. Vestimenta: formal campestre.',
       'LOCATION:La Quebrada\\, Diagonal Santa Rita Final\\, Zona 2\\, La Esperanza\\, Quetzaltenango',
       'DTSTART:20261220T173000Z',
       'DTEND:20261220T214500Z',
@@ -393,6 +406,14 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
 
 
 
+
+  /**
+   * Trato al invitado: una persona → "tú" (invitarte, confirma, tu lugar);
+   * varias personas → "ustedes" (invitarles, confirmen, sus lugares).
+   * Sin invitado identificado, las secciones generales usan "ustedes".
+   */
+  const totalSeats = currentGuest.pases || currentGuest.adultos + currentGuest.ninos;
+  const manyGuests = !hasGuest || totalSeats > 1;
 
   const triggerCopiedToast = (msg: string) => {
     setCopiedNotification(msg);
@@ -436,16 +457,18 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
           <p className="greet">{currentGuest.nombre}</p>
           <div>
             <p className="font-serif italic text-lg sm:text-xl md:text-2xl text-ink/90 max-w-md md:max-w-xl mx-auto leading-relaxed">
-              Con la bendición de Dios y de nuestras familias, tenemos el honor de invitarles a celebrar nuestra unión matrimonial.
+              Con la bendición de Dios y de nuestras familias, tenemos el honor de {manyGuests ? 'invitarles' : 'invitarte'} a celebrar nuestra unión matrimonial.
             </p>
           </div>
           <div className="seats">
-            Pases reservados:{' '}
-            <strong className="text-ink font-bold">
-              {currentGuest.ninos > 0
-                ? `${currentGuest.adultos} Adulto(s) y ${currentGuest.ninos} Niño(s) (${currentGuest.pases} Pases)`
-                : `${currentGuest.adultos} ${currentGuest.adultos === 1 ? 'Pase Personal' : 'Pases Asignados'}`}
-            </strong>
+            {manyGuests ? (
+              <p>
+                Hemos reservado <strong className="text-ink font-bold">{count(totalSeats, 'lugar', 'lugares')}</strong> para ustedes
+                {currentGuest.ninos > 0 ? `: ${describePeople(currentGuest.adultos, currentGuest.ninos)}.` : '.'}
+              </p>
+            ) : (
+              <p>Hemos reservado <strong className="text-ink font-bold">1 lugar</strong> para ti.</p>
+            )}
           </div>
         </Section>
         )}
@@ -455,7 +478,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             <div className="relative z-10 pt-2">
               <p className="font-serif text-sm uppercase tracking-[0.2em] text-blue-dark font-semibold mb-4">Domingo</p>
               <div className="font-serif text-3xl sm:text-3xl md:text-4xl font-bold text-ink tracking-wide mb-1">
-                20 de Diciembre de 2026
+                20 de diciembre de 2026
               </div>
               <div className="flex justify-center gap-3 sm:gap-5 mt-6" aria-label="Cuenta regresiva">
                 {([
@@ -472,10 +495,10 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
               </div>
               <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm md:text-base text-ink">
                 <span className=" px-3 py-1.5 rounded-full font-medium shadow-2xs">
-                  Recepción de Invitados: <strong className="text-ink font-bold">11:30 AM</strong>
+                  Recepción de invitados: <strong className="text-ink font-bold">11:30 AM</strong>
                 </span>
                 <span className=" px-3 py-1.5 rounded-full font-medium shadow-2xs">
-                  Inicio Ceremonia Civil: <strong className="text-ink font-bold">11:45 AM</strong>
+                  Inicio de la ceremonia civil: <strong className="text-ink font-bold">11:45 AM</strong>
                 </span>
               </div>
             </div>
@@ -512,7 +535,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             <button
               onClick={handleCopyLocation}
               className="group inline-flex items-center justify-center gap-1 text-base md:text-lg font-semibold text-ink hover:text-blue mt-1 cursor-pointer transition-colors"
-              title="Click para copiar dirección"
+              title="Copiar dirección"
             >
               <span className="font-serif">Diagonal Santa Rita Final, Zona 2</span>
               <CopyIcon className="text-muted group-hover:text-blue transition-transform group-hover:scale-110" />
@@ -557,14 +580,18 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
           </ol>
         </Section>
         <Section title="Mesa de regalos" id="regalos" top={<SprigDivider seed={9} />} bottom={<MeadowDivider seed={21} />}>
-          <p className="lead">Su presencia es lo más importante para nosotros. Si además deseas tener un detalle, aquí te dejamos algunas sugerencias de regalos.</p>
+          <p className="lead">
+            {manyGuests
+              ? 'Su presencia es lo más importante para nosotros. Si además desean tener un detalle, aquí les dejamos algunas sugerencias de regalos.'
+              : 'Tu presencia es lo más importante para nosotros. Si además deseas tener un detalle, aquí te dejamos algunas sugerencias de regalos.'}
+          </p>
 
           <div className="gift-card">
             <span className="gift-card-icon"><GiftIcon weight="duotone" /></span>
             <p className="gift-card-name">{giftRegistry.listName}</p>
             <p className="gift-card-event">
               No. de evento: <strong>{giftRegistry.eventNumber}</strong>
-              <span>También puedes comprar en cualquier tienda {giftRegistry.store} dando este número.</span>
+              <span>{manyGuests ? 'También pueden' : 'También puedes'} comprar en cualquier tienda {giftRegistry.store} indicando este número.</span>
             </p>
             <a
               href={giftRegistry.url}
@@ -582,9 +609,11 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
         <Section id="rsvp" title="">
           <div className="max-w-2xl mx-auto bg-gradient-to-b from-white via-mist/30 to-white border-2 border-line rounded-3xl p-6 sm:p-8 md:p-10 shadow-card relative overflow-hidden interactive-card group">
             <div className="text-center mb-6">
-              <h3 className="font-serif text-3xl sm:text-4xl font-bold text-ink">Confirmar Asistencia</h3>
+              <h3 className="font-serif text-3xl sm:text-4xl font-bold text-ink">Confirmar asistencia</h3>
               <p className="text-base md:text-lg text-muted mt-2 max-w-md mx-auto">
-                Por favor confirma antes del <strong className="text-ink font-bold">2 de Diciembre</strong> para reservar tu lugar.
+                {manyGuests ? 'Por favor, confirmen antes del ' : 'Por favor, confirma antes del '}
+                <strong className="text-ink font-bold">2 de diciembre</strong>
+                {manyGuests ? ' para reservar sus lugares.' : ' para reservar tu lugar.'}
               </p>
             </div>
 
@@ -592,13 +621,13 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
               <div className="mb-6 p-4 bg-mist border border-line rounded-2xl text-center text-base md:text-lg text-ink space-y-2 animate-fade-in">
                 <div className="flex items-center justify-center gap-2 font-semibold">
                   <CheckCircleIcon weight="fill" className="text-lg text-ink" />
-                  <span>¡Muchas gracias! Tu confirmación ha sido guardada.</span>
+                  <span>¡Muchas gracias! {manyGuests ? 'Su confirmación quedó guardada.' : 'Tu confirmación quedó guardada.'}</span>
                 </div>
                 <p className="text-muted text-sm">
-                  Si tu navegador bloqueó la ventana de WhatsApp, puedes{' '}
+                  ¿No se abrió WhatsApp?{' '}
                   <a href={lastWhatsAppUrl} target="_blank" rel="noopener noreferrer" className="text-ink font-bold underline">
-                    hacer clic aquí para abrir WhatsApp
-                  </a>.
+                    Abrir WhatsApp
+                  </a>
                 </p>
               </div>
             )}
@@ -617,7 +646,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
 
                 <div>
                   <label htmlFor="rsvp-status" className="block text-base md:text-lg font-semibold text-ink mb-1.5">
-                    ¿Podrás acompañarnos? *
+                    {manyGuests ? '¿Podrán acompañarnos? *' : '¿Podrás acompañarnos? *'}
                   </label>
                   <select
                     id="rsvp-status"
@@ -625,8 +654,8 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
                     onChange={(e) => setAttendanceStatus(e.target.value as 'yes' | 'no')}
                     className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white shadow-sm cursor-pointer transition-all duration-300"
                   >
-                    <option value="yes">¡Sí, con mucho gusto asistiré!</option>
-                    <option value="no">Lamentablemente no podré asistir</option>
+                    <option value="yes">{manyGuests ? '¡Sí, con mucho gusto asistiremos!' : '¡Sí, con mucho gusto asistiré!'}</option>
+                    <option value="no">{manyGuests ? 'Lamentablemente no podremos asistir' : 'Lamentablemente no podré asistir'}</option>
                   </select>
                 </div>
               </div>
@@ -649,7 +678,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
                   rows={2}
                   value={guestNote}
                   onChange={(e) => setGuestNote(e.target.value)}
-                  placeholder="¡Muchas felicidades Fatima y Luis!"
+                  placeholder="¡Muchas felicidades, Fatima y Luis!"
                   className="w-full px-4 py-3 rounded-xl border border-line text-base focus:outline-none focus:ring-4 focus:ring-mist focus:border-blue bg-white resize-none shadow-sm placeholder:text-muted transition-all duration-300"
                 />
               </div>
@@ -659,12 +688,12 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
                 className="w-full bg-blue hover:bg-blue-dark text-white py-4 px-6 rounded-full font-semibold text-lg md:text-xl flex items-center justify-center gap-2 shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
               >
                 <WhatsappLogoIcon className="text-xl md:text-2xl transition-transform duration-300 group-hover:scale-110" />
-                <span>Confirmar y Enviar por WhatsApp</span>
+                <span>Confirmar y enviar por WhatsApp</span>
               </button>
             </form>
 
             <p className="text-sm md:text-base text-center text-muted mt-4 leading-relaxed">
-              Tu confirmación se guardará en nuestra lista y se abrirá WhatsApp para enviarnos el mensaje.
+              La confirmación se guardará en nuestra lista y se abrirá WhatsApp para enviarnos el mensaje.
             </p>
           </div>
         </Section>
@@ -678,7 +707,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             <HeartIcon weight="fill" size={20} />
           </div>
           <p className="font-serif text-2xl md:text-3xl text-ink">¡Esperamos celebrar juntos!</p>
-          <p className="text-base md:text-lg text-muted mt-1">Fatima &amp; Luis · 20 de Diciembre de 2026</p>
+          <p className="text-base md:text-lg text-muted mt-1">Fatima &amp; Luis · 20 de diciembre de 2026</p>
           <p className="music-credit">
             ♪ Música: «{backgroundMusic.title}» de {backgroundMusic.composer},
             interpretada por {backgroundMusic.performer}
