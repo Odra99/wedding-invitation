@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ícono de pestaña: hortensia azul con hojas, en la paleta de la invitación.
+       Formas simples y grandes para que se lea a 16 px. -->
+  <defs>
+    <radialGradient id="p" cx="0.5" cy="1" r="1.1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#a9c4ec"/>
+      <stop offset="1" stop-color="#5c7ba8"/>
+    </radialGradient>
+    <radialGradient id="pl" cx="0.5" cy="1" r="1.1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#d6e5f8"/>
+      <stop offset="1" stop-color="#8fb0de"/>
+    </radialGradient>
+    <linearGradient id="l" x1="0" y1="1" x2="0.3" y2="0">
+      <stop offset="0" stop-color="#5d8d88"/>
+      <stop offset="1" stop-color="#a9cbbf"/>
+    </linearGradient>
+    <!-- Pétalo de florete (4 por florete) -->
+    <path id="pt" d="M0 0C-3-2-6-5-5.5-8.5C-5-11-2-12.5 0-12.5C2-12.5 5-11 5.5-8.5C6-5 3-2 0 0Z"/>
+    <g id="f">
+      <use href="#pt" fill="url(#p)"/>
+      <use href="#pt" fill="url(#p)" transform="rotate(90)"/>
+      <use href="#pt" fill="url(#p)" transform="rotate(180)"/>
+      <use href="#pt" fill="url(#p)" transform="rotate(270)"/>
+      <circle r="1.6" fill="#4a6690"/>
+    </g>
+    <g id="fl">
+      <use href="#pt" fill="url(#pl)"/>
+      <use href="#pt" fill="url(#pl)" transform="rotate(90)"/>
+      <use href="#pt" fill="url(#pl)" transform="rotate(180)"/>
+      <use href="#pt" fill="url(#pl)" transform="rotate(270)"/>
+      <circle r="1.5" fill="#5c7ba8"/>
+    </g>
+  </defs>
+
+  <!-- Hojas -->
+  <path d="M31 48C21 56 8 56 2 46C11 39 24 40 31 48Z" fill="url(#l)"/>
+  <path d="M33 48C43 56 56 56 62 46C53 39 40 40 33 48Z" fill="url(#l)"/>
+  <path d="M31 48Q17 47 5 46M33 48Q47 47 59 46" stroke="#eef4ea" stroke-width="1.2" fill="none" opacity="0.7"/>
+  <path d="M32 50L32 62" stroke="#7f9c8f" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Racimo en cúpula: atrás a los lados, adelante al centro -->
+  <g transform="translate(4.5 -1) scale(0.86)">
+  <use href="#f" transform="translate(16 30) rotate(20) scale(1.05)"/>
+  <use href="#f" transform="translate(48 30) rotate(-15) scale(1.05)"/>
+  <use href="#fl" transform="translate(24 16) rotate(10)"/>
+  <use href="#fl" transform="translate(40 16) rotate(35)"/>
+  <use href="#f" transform="translate(22 41) rotate(40)"/>
+  <use href="#f" transform="translate(42 41) rotate(5)"/>
+  <use href="#fl" transform="translate(32 28) rotate(22) scale(1.3)"/>
+  </g>
+</svg>
