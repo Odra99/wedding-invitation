@@ -7,6 +7,7 @@ import {
 } from '../data/weddingData';
 import { InvitationHero } from './InvitationHero';
 import { PageLoader } from './PageLoader';
+import { smoothScrollTo } from '../smoothScroll';
 import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
 import {
   HeartIcon,
@@ -413,6 +414,10 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
       {hasGuest && !rsvpSent && pastHero && <div className="fixed bottom-4 left-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
         <a
           href="#rsvp"
+          onClick={(e) => {
+            e.preventDefault();
+            smoothScrollTo(document.getElementById('rsvp'));
+          }}
           className="flex items-center gap-2 bg-blue text-white px-4 py-2.5 rounded-full shadow-2xl hover:bg-blue-dark transition active:scale-95 text-sm font-semibold tracking-wider uppercase border border-line/50"
         >
           <EnvelopeOpenIcon className="text-base" />

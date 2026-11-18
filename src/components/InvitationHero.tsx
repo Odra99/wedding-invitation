@@ -2,6 +2,7 @@ import React from 'react';
 import { CaretDownIcon } from '@phosphor-icons/react';
 import { HydrangeaCorner } from './WatercolorHydrangea';
 import { weddingInfo } from '../data/weddingData';
+import { smoothScrollTo } from '../smoothScroll';
 
 export const InvitationHero: React.FC = () => {
   return (
@@ -37,7 +38,17 @@ export const InvitationHero: React.FC = () => {
         </p>
       </div>
 
-      <a href="#bienvenida" className="hero-scroll hero-rise" style={{ animationDelay: '1.1s' }}>
+      {/* Baja suavemente a la primera sección después de la portada (la bienvenida
+          si hay invitado; si no, la fecha). El href es el respaldo sin JavaScript. */}
+      <a
+        href="#fecha"
+        className="hero-scroll hero-rise"
+        style={{ animationDelay: '1.1s' }}
+        onClick={(e) => {
+          e.preventDefault();
+          smoothScrollTo(e.currentTarget.closest('header')?.nextElementSibling ?? null);
+        }}
+      >
         <span>Desliza</span>
         <CaretDownIcon className="hero-scroll-caret" />
       </a>
