@@ -747,3 +747,63 @@ footer .small {
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px)
 }
+
+/* Tarjeta de la mesa de regalos */
+.gift-card {
+    max-width: 22rem;
+    margin: 1.5rem auto 0;
+    padding: 1.75rem 1.5rem;
+    border: 1px solid var(--color-line);
+    border-radius: 1.5rem;
+    background: rgba(255, 255, 255, .85);
+    box-shadow: 0 16px 36px -14px rgba(47, 74, 107, .18)
+}
+
+.gift-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.25rem;
+    height: 3.25rem;
+    border-radius: 999px;
+    background: var(--color-mist);
+    color: var(--color-gold);
+    font-size: 1.75rem;
+    margin-bottom: .5rem
+}
+
+.gift-card-store {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: .14em;
+    color: var(--color-ink)
+}
+
+.gift-card-name {
+    margin: .15rem 0 0;
+    font-size: 1rem;
+    font-style: italic;
+    color: var(--color-muted)
+}
+
+.gift-card-event {
+    margin: .9rem 0 0;
+    font-size: .95rem;
+    color: var(--color-ink);
+    letter-spacing: .04em
+}
+
+.gift-card-event strong {
+    font-weight: 600;
+    letter-spacing: .08em
+}
+
+.gift-card-event span {
+    display: block;
+    margin-top: .2rem;
+    font-size: .85rem;
+    font-style: italic;
+    color: var(--color-muted);
+    letter-spacing: 0
+}

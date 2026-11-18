@@ -167,3 +167,12 @@ export const entourageList = [
     description: 'Acompañándonos con amor en las firmas de nuestra acta matrimonial notarial.'
   }
 ];
+
+/** Mesa de regalos (sección "Mesa de regalos"). */
+export const giftRegistry = {
+  store: 'CEMACO',
+  listName: 'Boda Fatima y Luis · 20.12.2026',
+  url: 'https://www.cemaco.com/list/BodaLuisyFatima20122026',
+  // Para comprar en tienda: se da este número en caja
+  eventNumber: '202611-00088'
+};

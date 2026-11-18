@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   weddingInfo,
   itineraryList,
-  backgroundMusic
+  backgroundMusic,
+  giftRegistry
 } from '../data/weddingData';
 import { InvitationHero } from './InvitationHero';
 import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
@@ -17,7 +18,9 @@ import {
   CarIcon,
   WhatsappLogoIcon,
   MinusIcon,
-  PlusIcon
+  PlusIcon,
+  GiftIcon,
+  ArrowSquareOutIcon
 } from '@phosphor-icons/react';
 
 interface GuestData {
@@ -532,8 +535,24 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
           </ol>
         </Section>
         <Section title="Mesa de regalos" id="regalos" top={<SprigDivider seed={9} />} bottom={<MeadowDivider seed={21} />}>
-          <p className="lead">Su presencia es nuestro mejor regalo. Si desean tener un detalle con nosotros, aquí nos pueden encontrar.</p>
+          <p className="lead">Su presencia es lo más importante para nosotros. Si además deseas tener un detalle, aquí te dejamos algunas sugerencias de regalos.</p>
 
+          <div className="gift-card">
+            <span className="gift-card-icon"><GiftIcon weight="duotone" /></span>
+            <p className="gift-card-name">{giftRegistry.listName}</p>
+            <p className="gift-card-event">
+              No. de evento: <strong>{giftRegistry.eventNumber}</strong>
+              <span>También puedes comprar en cualquier tienda {giftRegistry.store} dando este número.</span>
+            </p>
+            <a
+              href={giftRegistry.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 mt-4 bg-blue hover:bg-blue-dark text-white py-3 px-6 rounded-full text-base md:text-lg font-semibold transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 active:scale-95"
+            >
+              Ver mesa de regalos <ArrowSquareOutIcon className="text-lg" />
+            </a>
+          </div>
         </Section>
 
         <Section id="rsvp" title="">
