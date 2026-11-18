@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Volume2, VolumeX, Play } from 'lucide-react';
+import { PlayIcon, SpeakerHighIcon, SpeakerSlashIcon } from '@phosphor-icons/react';
 import { backgroundMusic } from '../data/weddingData';
 
 /**
@@ -159,7 +159,7 @@ export const MusicPlayer: React.FC = () => {
               <>
                 {/* Pista visual mientras el navegador espera el primer toque */}
                 {!userPaused && <span className="absolute inset-0 rounded-full bg-line animate-ping" />}
-                <Play className="relative w-3.5 h-3.5 ml-0.5" />
+                <PlayIcon weight="bold" className="relative w-3.5 h-3.5 ml-0.5" />
               </>
             )}
           </span>
@@ -176,7 +176,7 @@ export const MusicPlayer: React.FC = () => {
             className="p-1.5 text-muted hover:text-ink rounded-full cursor-pointer transition-colors"
             title={isMuted ? 'Activar sonido' : 'Silenciar'}
           >
-            {isMuted ? <VolumeX className="w-3.5 h-3.5 text-muted" /> : <Volume2 className="w-3.5 h-3.5 text-blue" />}
+            {isMuted ? <SpeakerSlashIcon className="w-3.5 h-3.5 text-muted" /> : <SpeakerHighIcon className="w-3.5 h-3.5 text-blue" />}
           </button>
         )}
       </div>

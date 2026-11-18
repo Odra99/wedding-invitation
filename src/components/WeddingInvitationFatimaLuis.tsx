@@ -33,9 +33,6 @@ interface GuestData {
   whatsapp: string;
 }
 
-interface WeddingInvitationFatimaLuisProps {
-}
-
 /**
  * Selector de cantidad con botones − / +. Reemplaza a <input type="number">,
  * cuyas flechitas no aparecen en celulares; así nadie tiene que escribir y el
@@ -82,9 +79,7 @@ function Section({ title, id, children, top, bottom }: {
   )
 }
 
-export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisProps> = ({
-
-}) => {
+export const WeddingInvitationFatimaLuis: React.FC = () => {
   // Guest state
   const [currentGuest, setCurrentGuest] = useState<GuestData>({
     id: '',
@@ -246,7 +241,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
 
   // Observador de revelado con transiciones suaves en scroll
   useEffect(() => {
-    const elements = document.querySelectorAll('.reveal-item, .reveal-scale');
+    const elements = document.querySelectorAll('.reveal-item');
     if (!('IntersectionObserver' in window)) {
       elements.forEach((el) => el.classList.add('is-revealed'));
       return;
@@ -310,7 +305,7 @@ export const WeddingInvitationFatimaLuis: React.FC<WeddingInvitationFatimaLuisPr
     setRsvpSent(true);
 
     // 2. Open WhatsApp prefilled message
-    let text = '';
+    let text: string;
 
     if (status === 'yes') {
       text = `¡Hola Fatima y Luis! Confirmo con mucha alegría mi asistencia a su boda civil 💍✨\n\n` +

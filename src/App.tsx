@@ -12,9 +12,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-mist text-ink antialiased selection:bg-line">
       {/* La Boda Civil de Fatima & Luis: La web es la invitación */}
-      <WeddingInvitationFatimaLuis
-        
-      />
+      <WeddingInvitationFatimaLuis />
       <MusicPlayer />
     </div>
   );
