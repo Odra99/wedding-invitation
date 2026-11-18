@@ -84,8 +84,14 @@ function makeFlorets(seed: number): Floret[] {
 /** Hoja grande con nervaduras. Base en (x, y); con angle 0 la punta apunta hacia arriba. */
 export const Leaf: React.FC<{
   x: number; y: number; angle: number; scale: number; tone: LeafTone; gid: string;
-}> = ({ x, y, angle, scale, tone, gid }) => (
+  /** Si se indica, la hoja se "despliega" desde su base con este retraso (s). Ver .wh-bloom-leaf */
+  bloomDelay?: number;
+}> = ({ x, y, angle, scale, tone, gid, bloomDelay }) => (
   <g transform={`translate(${x} ${y}) rotate(${angle}) scale(${scale})`}>
+    <g
+      className={bloomDelay !== undefined ? 'wh-bloom-leaf' : undefined}
+      style={bloomDelay !== undefined ? { animationDelay: `${bloomDelay}s` } : undefined}
+    >
     <path d={LEAF} fill={`url(#${gid}-leaf-${tone})`} opacity="0.92" />
     {/* Media hoja más oscura: el pliegue que se ve en la acuarela */}
     <path d={LEAF_HALF} fill={LEAF_TONES[tone].shade} opacity="0.28" />
@@ -97,6 +103,7 @@ export const Leaf: React.FC<{
         <path d={`M0,${vy - 6} Q9,${vy - 10} 16,${vy - 18}`} />
       </g>
     ))}
+    </g>
   </g>
 );
 
@@ -171,33 +178,47 @@ export const WatercolorDefs: React.FC<{ gid: string }> = ({ gid }) => (
   </defs>
 );
 
-/** Una hortensia con tallo y hojas, dibujada como <g> en coordenadas locales 300 × 420. */
+/**
+ * Una hortensia con tallo y hojas, dibujada como <g> en coordenadas locales 300 × 420.
+ *
+ * `bloom`: anima la flor "floreciendo" una vez: el tallo se dibuja, las hojas se
+ * despliegan y los floretes se abren uno a uno del centro hacia afuera
+ * (clases .wh-bloom-* en style.css). Para repetirla, vuelve a montar el componente.
+ */
+// Tiempos de la animación de florecer (segundos)
+const BLOOM_FLORETS_START = 0.9;
+const BLOOM_FLORETS_SPREAD = 1.7;
+
 export const WatercolorHydrangea: React.FC<{
-  gid: string; seed?: number; transform?: string; leaves?: boolean; tone?: HydrangeaTone;
-}> = ({ gid, seed = 1, transform, leaves = true, tone = 'blue' }) => {
+  gid: string; seed?: number; transform?: string; leaves?: boolean; tone?: HydrangeaTone; bloom?: boolean;
+}> = ({ gid, seed = 1, transform, leaves = true, tone = 'blue', bloom = false }) => {
   const florets = useMemo(() => makeFlorets(seed), [seed]);
   const pal = TONES[tone];
+  // Retraso de cada florete: los del centro del racimo abren primero
+  const floretDelay = (f: Floret, i: number) =>
+    BLOOM_FLORETS_START + (Math.min(1, Math.hypot(f.x - 150, f.y - 118) / 110) * BLOOM_FLORETS_SPREAD) + (i % 3) * 0.04;
+  const leafDelay = (d: number) => (bloom ? d : undefined);
 
   return (
     <g transform={transform}>
       {leaves && (
         <g filter={`url(#${gid}-edge)`}>
           {/* Hojas de atrás (asoman detrás del racimo) */}
-          <Leaf gid={gid} x={112} y={196} angle={-84} scale={1.35} tone="sage" />
-          <Leaf gid={gid} x={192} y={170} angle={80} scale={1.25} tone="sage" />
-          {/* Tallo */}
-          <path d="M150,215 C149,290 147,355 142,420" fill="none" stroke={`url(#${gid}-stem)`} strokeWidth="3.4" strokeLinecap="round" />
-          <path d="M148,300 C160,312 172,318 186,322" fill="none" stroke="#9fb39f" strokeWidth="1.6" strokeLinecap="round" />
+          <Leaf gid={gid} x={112} y={196} angle={-84} scale={1.35} tone="sage" bloomDelay={leafDelay(0.6)} />
+          <Leaf gid={gid} x={192} y={170} angle={80} scale={1.25} tone="sage" bloomDelay={leafDelay(0.68)} />
+          {/* Tallo (en modo bloom se dibuja de abajo hacia arriba) */}
+          <path d="M142,420 C147,355 149,290 150,215" pathLength={1} className={bloom ? 'wh-bloom-stem' : undefined} fill="none" stroke={`url(#${gid}-stem)`} strokeWidth="3.4" strokeLinecap="round" />
+          <path d="M148,300 C160,312 172,318 186,322" pathLength={1} className={bloom ? 'wh-bloom-stem' : undefined} style={bloom ? { animationDelay: '0.25s' } : undefined} fill="none" stroke="#9fb39f" strokeWidth="1.6" strokeLinecap="round" />
           {/* Hojas de abajo, delante del tallo */}
-          <Leaf gid={gid} x={140} y={262} angle={-104} scale={1.05} tone="teal" />
-          <Leaf gid={gid} x={160} y={272} angle={112} scale={1.1} tone="teal" />
-          <Leaf gid={gid} x={186} y={322} angle={138} scale={0.72} tone="teal" />
-          <Leaf gid={gid} x={146} y={318} angle={-136} scale={0.66} tone="sage" />
+          <Leaf gid={gid} x={140} y={262} angle={-104} scale={1.05} tone="teal" bloomDelay={leafDelay(0.42)} />
+          <Leaf gid={gid} x={160} y={272} angle={112} scale={1.1} tone="teal" bloomDelay={leafDelay(0.5)} />
+          <Leaf gid={gid} x={186} y={322} angle={138} scale={0.72} tone="teal" bloomDelay={leafDelay(0.3)} />
+          <Leaf gid={gid} x={146} y={318} angle={-136} scale={0.66} tone="sage" bloomDelay={leafDelay(0.22)} />
         </g>
       )}
 
       {/* Aguada de fondo que da volumen al racimo */}
-      <g filter={`url(#${gid}-wash)`}>
+      <g filter={`url(#${gid}-wash)`} className={bloom ? 'wh-bloom-wash' : undefined}>
         <ellipse cx="150" cy="122" rx="86" ry="100" fill={pal.wash[0]} opacity="0.6" />
         <ellipse cx="122" cy="168" rx="50" ry="42" fill={pal.wash[1]} opacity="0.35" />
         <ellipse cx="182" cy="80" rx="50" ry="44" fill="#ffffff" opacity="0.7" />
@@ -207,6 +228,10 @@ export const WatercolorHydrangea: React.FC<{
       <g filter={`url(#${gid}-edge)`}>
         {florets.map((f, i) => (
           <g key={i} transform={`translate(${f.x.toFixed(1)} ${f.y.toFixed(1)}) rotate(${f.rot.toFixed(0)}) scale(${f.s.toFixed(2)})`}>
+            <g
+              className={bloom ? 'wh-bloom-floret' : undefined}
+              style={bloom ? { animationDelay: `${floretDelay(f, i).toFixed(2)}s` } : undefined}
+            >
             {[0, 90, 180, 270].map((a) => (
               <path
                 key={a}
@@ -219,16 +244,19 @@ export const WatercolorHydrangea: React.FC<{
                 strokeOpacity="0.45"
               />
             ))}
+            {/* En modo bloom el centrito va dentro del florete para abrir junto con él */}
+            {bloom && <circle r="1.5" fill={tone === 'white' ? '#c9b98a' : pal.edges[f.c]} opacity="0.8" />}
+            </g>
           </g>
         ))}
       </g>
 
       {/* Centritos de cada florete */}
-      <g>
+      {!bloom && <g>
         {florets.map((f, i) => (
           <circle key={i} cx={f.x.toFixed(1)} cy={f.y.toFixed(1)} r={1.5 * f.s} fill={tone === 'white' ? '#c9b98a' : pal.edges[f.c]} opacity="0.8" />
         ))}
-      </g>
+      </g>}
     </g>
   );
 };

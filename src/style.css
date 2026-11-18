@@ -342,15 +342,20 @@ footer {
     overflow: visible
 }
 
-/* La pradera se pega al borde inferior de la sección (sangra el padding) */
+/* La pradera se pega al borde inferior de la sección (sangra el padding).
+   Solo se recorta a los lados (para no crear scroll horizontal); hacia arriba
+   las flores más altas pueden salirse libremente sobre el fondo transparente
+   de la sección, así no quedan cortadas. */
 .flower-divider.meadow {
-    margin: 2rem -1.75rem -2.5rem;
-    overflow: hidden
+    position: relative;
+    margin: 2.5rem -1.75rem -2.5rem;
+    overflow-x: clip;
+    overflow-y: visible
 }
 
 .flower-divider.meadow svg {
     height: clamp(115px, 24vw, 160px);
-    overflow: hidden
+    overflow: visible
 }
 
 .flower-divider.sprig {
@@ -499,4 +504,116 @@ footer {
     font-style: italic;
     color: var(--color-muted);
     letter-spacing: 0
+}
+
+/* ---- Pantalla de carga (mientras se buscan los datos del invitado) ---- */
+.page-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: .25rem;
+    background:
+        radial-gradient(ellipse 60% 45% at 50% 45%, #fff 0%, rgba(255, 255, 255, 0) 70%),
+        var(--color-ivory);
+    transition: opacity .7s ease, visibility .7s ease
+}
+
+.page-loader.is-hiding {
+    opacity: 0;
+    visibility: hidden
+}
+
+.page-loader-flower {
+    width: 190px;
+    height: auto;
+    overflow: visible;
+    /* Cada ciclo: florece, se sostiene y se desvanece antes de volver a empezar
+       (la duración debe coincidir con BLOOM_CYCLE_MS en PageLoader.tsx) */
+    animation: loaderCycle 4.6s ease forwards
+}
+
+.page-loader-names {
+    margin: .75rem 0 0;
+    font-family: 'Pinyon Script', cursive;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--color-blue)
+}
+
+.page-loader-text {
+    margin: 0;
+    font-size: .85rem;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--color-muted)
+}
+
+.page-loader-dots span {
+    animation: loaderDot 1.4s ease-in-out infinite
+}
+
+.page-loader-dots span:nth-child(2) { animation-delay: .2s }
+.page-loader-dots span:nth-child(3) { animation-delay: .4s }
+
+@keyframes loaderCycle {
+    0%, 86% { opacity: 1; transform: none }
+    100% { opacity: 0; transform: scale(.96) translateY(4px) }
+}
+
+/* ---- Hortensia floreciendo (WatercolorHydrangea con bloom) ---- */
+/* En SVG el origen (0 0) es la base de la hoja / el centro del florete */
+.wh-bloom-stem {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: whStem .8s ease-out forwards
+}
+
+.wh-bloom-leaf {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    transform: scale(0);
+    animation: whLeaf .9s cubic-bezier(.34, 1.4, .64, 1) forwards
+}
+
+.wh-bloom-wash {
+    opacity: 0;
+    animation: whFade 1.6s ease .8s forwards
+}
+
+.wh-bloom-floret {
+    transform-box: view-box;
+    transform-origin: 0 0;
+    transform: scale(0);
+    opacity: 0;
+    animation: whFloret .75s cubic-bezier(.34, 1.56, .64, 1) forwards
+}
+
+@keyframes whStem { to { stroke-dashoffset: 0 } }
+
+@keyframes whLeaf {
+    from { transform: scale(0) rotate(-25deg) }
+    to { transform: none }
+}
+
+@keyframes whFade { to { opacity: 1 } }
+
+@keyframes whFloret {
+    0% { transform: scale(0) rotate(-90deg); opacity: 0 }
+    50% { opacity: 1 }
+    100% { transform: none; opacity: 1 }
+}
+
+/* Sin animaciones: la flor se muestra ya abierta */
+@media(prefers-reduced-motion:reduce) {
+    .wh-bloom-leaf, .wh-bloom-floret, .wh-bloom-wash { transform: none; opacity: 1 }
+    .wh-bloom-stem { stroke-dashoffset: 0 }
+}
+
+@keyframes loaderDot {
+    0%, 100% { opacity: .15 }
+    50% { opacity: 1 }
 }

@@ -6,6 +6,7 @@ import {
   giftRegistry
 } from '../data/weddingData';
 import { InvitationHero } from './InvitationHero';
+import { PageLoader } from './PageLoader';
 import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
 import {
   HeartIcon,
@@ -79,7 +80,36 @@ function Section({ title, id, children, top, bottom }: {
   )
 }
 
+/**
+ * Lee el código de invitación. Solo se acepta `?id=` (también si viene
+ * después de un # en la URL, p. ej. `/#/?id=ABC`).
+ */
+function readInvitationId(): string | null {
+  let search = window.location.search;
+  if (!search && window.location.hash.includes('?')) {
+    search = window.location.hash.substring(window.location.hash.indexOf('?'));
+  }
+  const id = new URLSearchParams(search).get('id')?.trim();
+  return id || null;
+}
+
+/**
+ * none: la URL no trae id → se muestra la invitación general (sin bienvenida ni confirmación).
+ * loading: buscando al invitado → pantalla de carga.
+ * found: invitado encontrado → bienvenida personalizada y formulario de confirmación.
+ * notfound: el id no existe o falló la red → igual que "none".
+ */
+type GuestStatus = 'none' | 'loading' | 'found' | 'notfound';
+
+// Si Google Apps Script no responde en este tiempo, se deja de esperar
+const GUEST_FETCH_TIMEOUT_MS = 15000;
+
 export const WeddingInvitationFatimaLuis: React.FC = () => {
+  // Se calcula una sola vez al cargar, así no hay "parpadeo" antes de la pantalla de carga
+  const [invitationId] = useState(readInvitationId);
+  const [guestStatus, setGuestStatus] = useState<GuestStatus>(() => (invitationId ? 'loading' : 'none'));
+  const hasGuest = guestStatus === 'found';
+
   // Guest state
   const [currentGuest, setCurrentGuest] = useState<GuestData>({
     id: '',
@@ -90,7 +120,6 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
     nota: '',
     whatsapp: weddingInfo.phoneWhatsapp
   });
-  const [isLoadingGuest, setIsLoadingGuest] = useState(false);
   const [copiedNotification, setCopiedNotification] = useState<string | null>(null);
 
   // RSVP Form state
@@ -172,13 +201,14 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
     });
   };
 
-  // Fetch guest from Google Apps Script or demo fallback
+  // Busca al invitado en Google Apps Script. Devuelve true si lo encontró.
   const fetchGuestById = async (invitationId: string) => {
-    setIsLoadingGuest(true);
     const fetchUrl = `${weddingInfo.googleScriptUrl}?id=${encodeURIComponent(invitationId)}`;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), GUEST_FETCH_TIMEOUT_MS);
 
     try {
-      const res = await fetch(fetchUrl);
+      const res = await fetch(fetchUrl, { signal: controller.signal });
       const rawText = await res.text();
       let data: any = null;
       try {
@@ -195,53 +225,41 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
           nota: data.nota || data.note || '',
           whatsapp: data.telefono || data.phone || weddingInfo.phoneWhatsapp
         });
-        setIsLoadingGuest(false);
         return true;
       }
     } catch {
-      // Ignore network errors and check demo fallback
+      // Error de red o tiempo agotado: se trata como invitado no encontrado
+    } finally {
+      window.clearTimeout(timeout);
     }
-    setIsLoadingGuest(false);
     return false;
   };
 
-  // Load guest from URL search params on mount
+  // Al cargar: si la URL trae ?id=, buscar al invitado (la pantalla de carga se muestra mientras tanto)
   useEffect(() => {
-    let search = window.location.search;
-    if (!search && window.location.hash.includes('?')) {
-      search = window.location.hash.substring(window.location.hash.indexOf('?'));
-    }
-    const urlParams = new URLSearchParams(search);
-    const invitationId = urlParams.get('id') || urlParams.get('invitacion') || urlParams.get('codigo');
-    const directName = urlParams.get('nombre') || urlParams.get('name');
-    const directAdults = urlParams.get('adultos') || urlParams.get('adults');
-    const directChildren = urlParams.get('ninos') || urlParams.get('children');
-    const directPasses = urlParams.get('pases') || urlParams.get('passes');
-    const directNote = urlParams.get('nota');
+    if (!invitationId) return;
+    let cancelled = false;
+    fetchGuestById(invitationId).then((ok) => {
+      if (!cancelled) setGuestStatus(ok ? 'found' : 'notfound');
+    });
 
-    if (directName) {
-      applyGuestData({
-        id: invitationId || '',
-        nombre: directName,
-        adultos: directAdults ? parseInt(directAdults, 10) : 2,
-        ninos: directChildren ? parseInt(directChildren, 10) : 0,
-        pases: directPasses ? parseInt(directPasses, 10) : (parseInt(directAdults || '2', 10) + parseInt(directChildren || '0', 10)),
-        nota: directNote || ''
-      });
-      return;
-    }
-
-    if (invitationId) {
-      fetchGuestById(invitationId);
-    }
-
-    // Expose global tester on window
-    (window as any).buscarInvitado = (id: string) => fetchGuestById(id);
+    // Para probar desde la consola del navegador: buscarInvitado('ABC123')
+    (window as any).buscarInvitado = async (id: string) => {
+      setGuestStatus('loading');
+      const ok = await fetchGuestById(id);
+      setGuestStatus(ok ? 'found' : 'notfound');
+      return ok;
+    };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Observador de revelado con transiciones suaves en scroll
   useEffect(() => {
-    const elements = document.querySelectorAll('.reveal-item');
+    // Se vuelve a ejecutar cuando cambia guestStatus, porque la bienvenida y la
+    // confirmación aparecen después de cargar al invitado
+    const elements = document.querySelectorAll('.reveal-item:not(.is-revealed)');
     if (!('IntersectionObserver' in window)) {
       elements.forEach((el) => el.classList.add('is-revealed'));
       return;
@@ -262,7 +280,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
     elements.forEach((el) => observer.observe(el));
 
     return () => observer.disconnect();
-  }, []);
+  }, [guestStatus]);
 
   // Handle RSVP Submit (Google Sheets webhook + WhatsApp)
   const handleRSVPSubmit = (e: React.FormEvent) => {
@@ -389,7 +407,10 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
         </div>
       )}
       {/* Botón flotante para confirmar en móviles (se oculta tras confirmar) */}
-      {!rsvpSent && pastHero && <div className="fixed bottom-4 left-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
+      <PageLoader visible={guestStatus === 'loading'} />
+
+      {/* Botón flotante para confirmar: solo para invitados identificados */}
+      {hasGuest && !rsvpSent && pastHero && <div className="fixed bottom-4 left-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
         <a
           href="#rsvp"
           className="flex items-center gap-2 bg-blue text-white px-4 py-2.5 rounded-full shadow-2xl hover:bg-blue-dark transition active:scale-95 text-sm font-semibold tracking-wider uppercase border border-line/50"
@@ -404,10 +425,10 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
 
         <InvitationHero />
 
+        {/* Bienvenida personalizada: solo si la URL trae un ?id= válido */}
+        {hasGuest && (
         <Section title="" id="bienvenida" bottom={<MeadowDivider seed={3} />}>
-          <p className={`greet transition-opacity duration-300 ${isLoadingGuest ? 'opacity-40' : ''}`}>
-            {isLoadingGuest ? 'Cargando…' : currentGuest.nombre}
-          </p>
+          <p className="greet">{currentGuest.nombre}</p>
           <div>
             <p className="font-serif italic text-lg sm:text-xl md:text-2xl text-ink/90 max-w-md md:max-w-xl mx-auto leading-relaxed">
               Con la bendición de Dios y de nuestras familias, tenemos el honor de invitarles a celebrar nuestra unión matrimonial.
@@ -422,6 +443,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             </strong>
           </div>
         </Section>
+        )}
 
         <Section title="Fecha" id="fecha">
           <div className="rounded-3xl p-6 md:p-8  text-center relative overflow-hidden group h-full flex flex-col justify-between">
@@ -550,6 +572,8 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
           </div>
         </Section>
 
+        {/* Confirmación de asistencia: solo para invitados identificados */}
+        {hasGuest && (
         <Section id="rsvp" title="">
           <div className="max-w-2xl mx-auto bg-gradient-to-b from-white via-mist/30 to-white border-2 border-line rounded-3xl p-6 sm:p-8 md:p-10 shadow-card relative overflow-hidden interactive-card group">
             <div className="text-center mb-6">
@@ -639,7 +663,7 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             </p>
           </div>
         </Section>
-
+        )}
 
         {/* PIE DE PÁGINA CON BOUQUET FINAL */}
         <footer className="text-center px-6 pt-2 pb-8 relative">
