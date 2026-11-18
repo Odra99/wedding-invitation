@@ -7,12 +7,12 @@ import {
 } from '../data/weddingData';
 import { InvitationHero } from './InvitationHero';
 import { PageLoader } from './PageLoader';
+import { RsvpNudge } from './RsvpNudge';
 import { smoothScrollTo } from '../smoothScroll';
 import { BottomBouquets, MeadowDivider, SprigDivider } from './WatercolorFlowers';
 import {
   HeartIcon,
   CheckCircleIcon,
-  EnvelopeOpenIcon,
   CalendarPlusIcon,
   DownloadSimpleIcon,
   CopyIcon,
@@ -428,23 +428,15 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
           <span>{copiedNotification}</span>
         </div>
       )}
-      {/* Botón flotante para confirmar en móviles (se oculta tras confirmar) */}
       <PageLoader visible={guestStatus === 'loading'} />
 
-      {/* Botón flotante para confirmar: solo para invitados identificados */}
-      {hasGuest && !rsvpSent && pastHero && <div className="fixed bottom-4 left-4 z-40 md:hidden transition-transform duration-300 hover:scale-105 active:scale-95">
-        <a
-          href="#rsvp"
-          onClick={(e) => {
-            e.preventDefault();
-            smoothScrollTo(document.getElementById('rsvp'));
-          }}
-          className="flex items-center gap-2 bg-blue text-white px-4 py-2.5 rounded-full shadow-2xl hover:bg-blue-dark transition active:scale-95 text-sm font-semibold tracking-wider uppercase border border-line/50"
-        >
-          <EnvelopeOpenIcon className="text-base" />
-          <span>Confirmar</span>
-        </a>
-      </div>}
+      {/* Botón flotante para confirmar (sobre que se abre y cierra en bucle): solo para invitados identificados */}
+      {hasGuest && !rsvpSent && pastHero && (
+        <div className="fixed bottom-5 left-5 z-40 md:hidden">
+          {/* Misma distancia al borde que el reproductor de música (bottom-5 / right-5) */}
+          <RsvpNudge onClick={() => smoothScrollTo(document.getElementById('rsvp'))} />
+        </div>
+      )}
 
       {/* CONTENEDOR PRINCIPAL RESPONSIVE */}
       <main className="w-full max-w-lg md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto bg-white min-h-screen shadow-2xl relative border-x border-line/60 pb-20 overflow-hidden md:rounded-3xl lg:rounded-[2.5rem] md:border md:border-line/80">
