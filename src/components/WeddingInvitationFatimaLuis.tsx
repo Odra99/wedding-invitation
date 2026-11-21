@@ -603,8 +603,8 @@ export const WeddingInvitationFatimaLuis: React.FC = () => {
             <div className="text-center mb-6">
               <h3 className="font-serif text-3xl sm:text-4xl font-bold text-ink">Confirmar asistencia</h3>
               <p className="text-base md:text-lg text-muted mt-2 max-w-md mx-auto">
-                {manyGuests ? 'Por favor, confirmen antes del ' : 'Por favor, confirma antes del '}
-                <strong className="text-ink font-bold">2 de diciembre</strong>
+                {manyGuests ? 'Agradecemos puedan confirmar antes del ' : 'Agradecemos puedas confirmar antes del '}
+                <strong className="text-ink font-bold">5 de diciembre</strong>
                 {manyGuests ? ' para reservar sus lugares.' : ' para reservar tu lugar.'}
               </p>
             </div>

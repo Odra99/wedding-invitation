@@ -59,19 +59,25 @@ export const itineraryList: ItineraryItem[] = [
   },
   {
     time: '01:15 PM',
-    title: 'Almuerzo',
+    title: 'Brindis y palabras de los novios',
     description: 'Servicio del almuerzo para compartir en familia en el salón.',
     location: 'La Casona'
   },
   {
-    time: '02:15 PM',
-    title: 'Brindis y palabras',
+    time: '01:30 PM',
+    title: 'Almuerzo',
     description: 'Palabras de los recién casados, padres y brindis nupcial.',
     location: 'La Casona'
   },
   {
-    time: '02:40 PM',
+    time: '02:30 PM',
     title: 'Corte del pastel y café',
+    description: 'Corte del pastel matrimonial acompañado de café recién preparado.',
+    location: 'La Casona'
+  },
+  {
+    time: '03:15 PM',
+    title: 'Cierre del evento',
     description: 'Corte del pastel matrimonial acompañado de café recién preparado.',
     location: 'La Casona'
   }
